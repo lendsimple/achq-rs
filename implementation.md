@@ -411,7 +411,38 @@ let token: Option<AchqToken> = created.token;
 - Insta snapshot of the parsed industry table, with a row-count assertion.
 - Conformance self-test using a deliberately wrong fixture struct.
 
-**Status**: Not Started
+**Status**: Complete
+
+**Notes (as built)**:
+- **Sequencing:** ~~seeding `overrides.toml` with the known deviations~~ moves to Stage 3. The deviations belong to request types that don't exist yet, and the stale-override check rejects an entry with nothing to match.
+  - Stage 2 lists all 12 gateway fragments under `unregistered`, and the check passes with an empty registry.
+  - **Stage 3 must:** register each request type in `xtask/src/conformance.rs` (`("bankpayment", fields::<PaymentRequest>())`), remove it from `unregistered`, and add its `[gateway.<op>]` overrides (`missing` / `extra` / `required`, each with a reason).
+- **Where conformance lives:** ~~`achq/tests/conformance.rs`~~ became `xtask/src/conformance.rs`. It runs as xtask tests under `cargo test --workspace` and as `cargo xtask conformance`, which CI's codegen job also runs.
+  - xtask is never packaged, so it can read `schema/`; a test in `achq` would break the packaged-crate tests.
+  - It compares request-body properties and their `required` flags. The gateway fragments have no `maxLength`, so lengths aren't compared.
+  - Query parameters such as `OwnerAuth` are left to the Stage 3 operation table.
+- **How xtask depends on achq:** with `default-features = false`. This way the generated `onboarding` module is never part of the tool that generates it, and a broken `industry.rs` can't stop `cargo xtask codegen` from replacing it. We hit exactly that while bootstrapping the file.
+- **Layout of `schema/`:**
+  - `gateway/*.json` (12 files);
+  - `onboarding/{merchant-onboarding,post_onboarding-fees}.json`, kept as two byte-exact files rather than ~~a merged `onboarding.json`~~. A test asserts that their shared `ErrorResponse` is identical;
+  - `industry-categories.md`, with its front matter removed;
+  - `README.md`, holding the source, date and SHA-256 per file;
+  - `overrides.toml`.
+- **xtask tasks:**
+  - `fetch` writes only the files that changed and is idempotent.
+  - `drift` reports the properties, query parameters and component schemas that were added, removed or changed, "reformatted" or "other changes" otherwise, and any **new reference page** in `llms.txt` that isn't vendored or on the `NOT_API` list.
+  - ~~`xtask record`~~ remains in Stage 5, as planned.
+- **Industry codegen:** produces `achq/src/onboarding/industry.rs`, an `industry_table!` invocation written as plain text, since prettyplease can't format a macro body.
+  - The hand-written macro in `onboarding/mod.rs` generates the two enums:
+    - `IndustryCategory`: 13 variants, with `ALL`, `name()` and `industries()`;
+    - `Industry`: 150 variants, with `ALL`, `name()` and `category()`.
+  - Both have `Display` and a `FromStr` that ignores case, with an `UnknownIndustry` error.
+  - They are `Copy` with no `Other`, as planned.
+  - Variant names come from heck. The overrides in `[industry.names]` are `NftsDigitalCollectible`, `SaasAndSoftwareApplications` and `HeatingPlumbingAc`; a stale override or a name collision is a codegen error.
+- **xtask dependencies:** `achq`, heck, serde, serde_json, sha2, toml and ureq. prettyplease, quote, syn and insta weren't needed, so the plan's insta snapshot became exact-string tests.
+- **Features:** `onboarding` (on by default) gates the module. The CI clippy and test matrices add `--no-default-features`, wasm clippy covers `--features onboarding`, and a new `codegen` job runs `codegen --check` and `conformance`.
+- **Test counts:** 46 achq unit tests (5 onboarding) and 29 xtask tests.
+- **Verified:** the same matrix as Stage 1, plus `xtask drift` clean, `codegen --check`, `conformance`, and the nightly docs.rs build.
 
 ## Stage 3: Envelope, operations DSL, sans-IO protocol, errors
 **Goal**:

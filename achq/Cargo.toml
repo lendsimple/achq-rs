@@ -28,3 +28,9 @@ time = { version = "0.3.55", features = ["parsing", "formatting", "macros"] }
 [dev-dependencies]
 pretty_assertions = "1.4.1"
 trybuild = "1.0.122"
+
+[features]
+default = ["onboarding"]
+## The onboarding API: industry categories now, merchant and fee profile
+## creation in a later release.
+onboarding = []

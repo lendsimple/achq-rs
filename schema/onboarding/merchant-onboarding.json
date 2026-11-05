@@ -1,0 +1,837 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "SpeedchexOnboarding",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://www.speedchex.com/api"
+    }
+  ],
+  "paths": {
+    "/onboarding": {
+      "post": {
+        "tags": [
+          "Onboarding"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MerchantOnboardingRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MerchantOnboardingRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/MerchantOnboardingRequest"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/MerchantOnboardingRequest"
+              }
+            },
+            "text/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/MerchantOnboardingRequest"
+              }
+            },
+            "application/*+xml": {
+              "schema": {
+                "$ref": "#/components/schemas/MerchantOnboardingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantOnboardingResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantOnboardingResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantOnboardingResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantOnboardingResponse"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/MerchantOnboardingResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ProviderID": []
+          },
+          {
+            "Provider_GateID": []
+          },
+          {
+            "Provider_GateKey": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AuthorizedRepresentative": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "First name of company representative",
+            "nullable": true
+          },
+          "lastName": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Last name of company representative",
+            "nullable": true
+          },
+          "title": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Business title of representative",
+            "nullable": true
+          },
+          "email": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Business email of representative",
+            "nullable": true
+          },
+          "authRepPhone": {
+            "maxLength": 10,
+            "minLength": 0,
+            "type": "string",
+            "description": "Business contact phone number of representative. No dashes or parentheses. Numbers only.",
+            "nullable": true
+          },
+          "ownerShipPercent": {
+            "maxLength": 3,
+            "minLength": 0,
+            "type": "string",
+            "description": "Percent of business owned/controlled by representative",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Optional additional company representative"
+      },
+      "BankAccounts": {
+        "type": "object",
+        "properties": {
+          "transfers": {
+            "$ref": "#/components/schemas/Transfers"
+          },
+          "billing": {
+            "$ref": "#/components/schemas/Billing"
+          }
+        },
+        "additionalProperties": false,
+        "description": ""
+      },
+      "Billing": {
+        "type": "object",
+        "properties": {
+          "bankName": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Name of bank to be debited for ACHQ service fees",
+            "nullable": true
+          },
+          "routingNumber": {
+            "maxLength": 9,
+            "minLength": 0,
+            "type": "string",
+            "description": "Bank routing (ABA) number to be debited for ACHQ services fees",
+            "nullable": true
+          },
+          "accountNumber": {
+            "maxLength": 30,
+            "minLength": 0,
+            "type": "string",
+            "description": "Bank account (DDA) number to be debited for ACHQ services fees",
+            "nullable": true
+          },
+          "billingTokenType": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Use this field to define the bank-account token type being submitted in lieu of a bank account details",
+            "nullable": true
+          },
+          "billingProcessorToken": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Use this field to pass along the token value to be used for service fees",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "The bank account to be used for payment of ACHQ service fees"
+      },
+      "BusinessEntity": {
+        "required": [
+          "address1",
+          "businessDescription",
+          "city",
+          "companyDBA",
+          "country",
+          "legalBusinessName",
+          "phone",
+          "state",
+          "taxId",
+          "type",
+          "website",
+          "zip"
+        ],
+        "type": "object",
+        "properties": {
+          "legalBusinessName": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Legal business name for the entity"
+          },
+          "taxId": {
+            "maxLength": 9,
+            "minLength": 9,
+            "type": "string",
+            "description": "Employer Identification Number (EIN) or SSN for Sole Proprietor. This value must be correlated to the entity in \"Legal Business Name\".  No dashes. Numbers only."
+          },
+          "companyDBA": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "This value will be used on customer's statements"
+          },
+          "industryCategory": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Choose the value that best fits from \"Acceptable Industry Category List\". Please see https://developers.achq.com/reference/industry-categories",
+            "nullable": true
+          },
+          "specificIndustry": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "This value must correlate to the Industry Category. Please see https://developers.achq.com/reference/industry-categories.",
+            "nullable": true
+          },
+          "mcc": {
+            "maxLength": 4,
+            "minLength": 0,
+            "type": "string",
+            "description": "An MCC is a four-digit number used to classify a business by the types of goods or services it provides.  If you already have the MCC code for a customer, you may pass that value here instead of providing the IndustryCategory/SpecificIndustry fields.",
+            "nullable": true
+          },
+          "type": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Accepted Values: Corporation, LLC, Sole Proprietor, Partnership, Non-profit"
+          },
+          "website": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Merchant's primary URL"
+          },
+          "phone": {
+            "maxLength": 10,
+            "minLength": 10,
+            "type": "string",
+            "description": "General business contact line.  No dashes or parentheses. Numbers only."
+          },
+          "businessDescription": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Describe merchant's business model and products/servces"
+          },
+          "address1": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Merchant street address"
+          },
+          "address2": {
+            "maxLength": 9,
+            "minLength": 0,
+            "type": "string",
+            "description": "",
+            "nullable": true
+          },
+          "city": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Merchant city address"
+          },
+          "state": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Merchant state address. Accepted values: any state name or state code."
+          },
+          "zip": {
+            "maxLength": 5,
+            "minLength": 0,
+            "type": "string",
+            "description": "Merchant zip address"
+          },
+          "country": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Merchant country. Accepted value: United States, US"
+          },
+          "externalId": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "A unique string value which can be used for traceability between ACHQ and your application.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Details on the entity that is being enrolled in ACHQ services"
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "additionalInformation": {
+            "type": "string",
+            "nullable": true
+          },
+          "apiRequestId": {
+            "type": "string",
+            "nullable": true
+          },
+          "apiRequestTimeStamp": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "FeeProfile": {
+        "type": "object",
+        "properties": {
+          "feeName": {
+            "type": "string",
+            "description": "Friendly name for this fee profile",
+            "nullable": true
+          },
+          "monthlyFee": {
+            "type": "number",
+            "description": "Monthly service fee",
+            "format": "double",
+            "nullable": true
+          },
+          "transactionFee": {
+            "type": "number",
+            "description": "Dollar amount fee to be assessed for each transaction",
+            "format": "double",
+            "nullable": true
+          },
+          "returnFee": {
+            "type": "number",
+            "description": "Dollar amount fee to be assessed for each returned transaction",
+            "format": "double",
+            "nullable": true
+          },
+          "disputeFee": {
+            "type": "number",
+            "description": "Dollar amount fee to be assessed for each disputed transaction",
+            "format": "double",
+            "nullable": true
+          },
+          "percentFee": {
+            "type": "number",
+            "description": "Percentage fee to be assessed on the dollar amount of each transaction",
+            "format": "double",
+            "nullable": true
+          },
+          "percentCap": {
+            "type": "number",
+            "description": "Max dollar amount to be assessed for a “percentFee” charge.",
+            "format": "double",
+            "nullable": true
+          },
+          "bankStatusFee": {
+            "type": "number",
+            "description": "Dollar amount fee to be assessed for each “BankStatus” verification",
+            "format": "double",
+            "nullable": true
+          },
+          "bankIdFee": {
+            "type": "number",
+            "description": "Dollar amount fee to be assessed for each “BankID” verification",
+            "format": "double",
+            "nullable": true
+          },
+          "setupFee": {
+            "type": "number",
+            "description": "Dollar amount fee to be charged if merchant account is activate",
+            "format": "double",
+            "nullable": true
+          },
+          "metaData": {
+            "type": "string",
+            "description": "Free-form key-value pair list that can be added to an account. Useful for storing account information that is not captured elsewhere.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MerchantOnboardingRequest": {
+        "required": [
+          "authorizedRepresentative",
+          "bankAccounts",
+          "businessEntity",
+          "onboardFunctions",
+          "paymentProfile",
+          "principalOwner"
+        ],
+        "type": "object",
+        "properties": {
+          "businessEntity": {
+            "$ref": "#/components/schemas/BusinessEntity"
+          },
+          "principalOwner": {
+            "$ref": "#/components/schemas/PrincipalOwner"
+          },
+          "authorizedRepresentative": {
+            "$ref": "#/components/schemas/AuthorizedRepresentative"
+          },
+          "paymentProfile": {
+            "$ref": "#/components/schemas/PaymentProfile"
+          },
+          "bankAccounts": {
+            "$ref": "#/components/schemas/BankAccounts"
+          },
+          "onboardFunctions": {
+            "$ref": "#/components/schemas/OnboardFunctions"
+          },
+          "feeProfileId": {
+            "type": "string",
+            "description": "Use the Id of a previously created fee profile to assign those fees to this account. Required if Fee.FeeProfile not provided. ",
+            "nullable": true
+          },
+          "feeProfile": {
+            "$ref": "#/components/schemas/FeeProfile"
+          }
+        },
+        "additionalProperties": false,
+        "description": ""
+      },
+      "MerchantOnboardingResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Onboarding Id",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "description": "Status",
+            "nullable": true
+          },
+          "apiRequestId": {
+            "type": "string",
+            "nullable": true
+          },
+          "apiRequestTimeStamp": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OnboardFunctions": {
+        "required": [
+          "requireKYC",
+          "requirePlaidConnect"
+        ],
+        "type": "object",
+        "properties": {
+          "requireKYC": {
+            "type": "boolean",
+            "description": "Set to true unless approved by your ACHQ platform account manager"
+          },
+          "requirePlaidConnect": {
+            "type": "boolean",
+            "description": "Set to true unless approved by your ACHQ platform account manager"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Defines responsibility for merchant onboarding functions"
+      },
+      "PaymentProfile": {
+        "required": [
+          "customerServiceEmail",
+          "customerServicePhone",
+          "customerTypeBusiness",
+          "customerTypeConsumer",
+          "enableCharges",
+          "enablePayouts",
+          "serviceUseCase",
+          "statementDescriptor"
+        ],
+        "type": "object",
+        "properties": {
+          "enableCharges": {
+            "type": "boolean",
+            "description": "Enables the merchant to initiate charges for goods/services"
+          },
+          "enablePayouts": {
+            "type": "boolean",
+            "description": "Enables the merchant to initiate outgoing payouts to customers/vendors/etc. Set to \"true\" in most cases so the merchant can send refunds"
+          },
+          "chargeDollarsMonth": {
+            "maxLength": 10,
+            "minLength": 0,
+            "type": "string",
+            "description": "Maximum charge dollars collected in a given month. Required if enableCharges = true",
+            "nullable": true
+          },
+          "chargesPerMonth": {
+            "maxLength": 7,
+            "minLength": 0,
+            "type": "string",
+            "description": "Maximum count of charges processed in a given month. Required if enableCharges = true",
+            "nullable": true
+          },
+          "chargesMaxAmount": {
+            "maxLength": 6,
+            "minLength": 0,
+            "type": "string",
+            "description": "Maximum single charge dollar amount. Required if EnablePayments = true",
+            "nullable": true
+          },
+          "payoutsDollarsMonth": {
+            "maxLength": 10,
+            "minLength": 0,
+            "type": "string",
+            "description": "Maximum payout dollars in a given month. Required if EnablePayouts = true",
+            "nullable": true
+          },
+          "payoutsPerMonth": {
+            "maxLength": 7,
+            "minLength": 0,
+            "type": "string",
+            "description": "Maximum count of payout transactions in a given month. Required if EnablePayouts = true",
+            "nullable": true
+          },
+          "payoutsMaxAmount": {
+            "maxLength": 6,
+            "minLength": 0,
+            "type": "string",
+            "description": "Maximum single payout dollar amount. Required if EnablePayouts = true",
+            "nullable": true
+          },
+          "customerTypeConsumer": {
+            "type": "boolean",
+            "description": "Enable to allow payments initiated against consumer/individual bank accounts. CustomerTypeConsumer or CustomerTypeBusiness must = true"
+          },
+          "customerTypeBusiness": {
+            "type": "boolean",
+            "description": "Enable to allow payments initiated against business bank accounts. CustomerTypeConsumer or CustomerTypeBusiness must = true"
+          },
+          "enablePPD": {
+            "type": "boolean",
+            "description": "Enable to allow PPD ACH (signed consumer authorization) payments. At least one Enable PPD, EnableCCD, EnableWEB, EnableTel must = true",
+            "nullable": true
+          },
+          "enableCCD": {
+            "type": "boolean",
+            "description": "Enable to allow CCD ACH (signed business authorization) payments. At least one Enable PPD, EnableCCD, EnableWEB, EnableTel must = true",
+            "nullable": true
+          },
+          "enableWEB": {
+            "type": "boolean",
+            "description": "Enable to allow WEB ACH (mobile or internet authorization) payments. At least one Enable PPD, EnableCCD, EnableWEB, EnableTel must = true",
+            "nullable": true
+          },
+          "enableTEL": {
+            "type": "boolean",
+            "description": "Enable to allow TEL ACH (telephone authorization) payments. At least one Enable PPD, EnableCCD, EnableWEB, EnableTel must = true",
+            "nullable": true
+          },
+          "statementDescriptor": {
+            "maxLength": 10,
+            "minLength": 0,
+            "type": "string",
+            "description": "10 character transaction description to be displayed on customer statements. We already pass along company name and customer service number, so consider some other value here."
+          },
+          "customerServicePhone": {
+            "maxLength": 10,
+            "minLength": 10,
+            "type": "string",
+            "description": "Contact number to be included on customer bank statements.  No dashes or parentheses. Numbers only."
+          },
+          "customerServiceEmail": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "General customer service email"
+          },
+          "serviceUseCase": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Specific use of ACHQ payment services.  Examples include payroll, service fees, sale of goods, subscription fee, tuition, etc."
+          }
+        },
+        "additionalProperties": false,
+        "description": "This object defines service type and transaction limits for the merchant"
+      },
+      "PrincipalOwner": {
+        "required": [
+          "address1",
+          "city",
+          "dob",
+          "email",
+          "firstName",
+          "ipAddress",
+          "jobTitle",
+          "lastName",
+          "mobilePhone",
+          "ownershipPercent",
+          "ssn",
+          "state",
+          "zip"
+        ],
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "First name of individual"
+          },
+          "lastName": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Last name of individual"
+          },
+          "jobTitle": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Role or title of individual in company"
+          },
+          "email": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Company email address"
+          },
+          "mobilePhone": {
+            "maxLength": 10,
+            "minLength": 10,
+            "type": "string",
+            "description": "Mobile phone number of individual. No dashes or parentheses. Numbers only."
+          },
+          "ssn": {
+            "maxLength": 9,
+            "minLength": 0,
+            "type": "string",
+            "description": "Social security number of individual. No dashes."
+          },
+          "ownershipPercent": {
+            "maxLength": 3,
+            "minLength": 0,
+            "type": "string",
+            "description": "Percentage of company controlled by individual"
+          },
+          "dob": {
+            "maxLength": 10,
+            "minLength": 0,
+            "type": "string",
+            "description": "Date of birth in MM/DD/YYYY format"
+          },
+          "address1": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Home street address of individual"
+          },
+          "address2": {
+            "maxLength": 30,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Home city address of individual"
+          },
+          "state": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Home state address of individual. Accepted valuesalaska, alabama, arkansas, american samoa, arizona, california, colorado, connecticut, district of columbia, delaware, florida, georgia, guam, hawaii, iowa, idaho, illinois, indiana, kansas, kentucky, louisiana, massachusetts, maryland, maine, michigan, minnesota, missouri, mississippi, montana, north carolina, north dakota, nebraska, new hampshire, new jersey, new mexico, nevada, new york, ohio, oklahoma, oregon, pennsylvania, puerto rico, rhode island, south carolina, south dakota, tennessee, texas, utah, virginia, virgin islands, vermont, washington, wisconsin, west virginia, wyoming"
+          },
+          "zip": {
+            "maxLength": 5,
+            "minLength": 0,
+            "type": "string",
+            "description": "Home zip address of individual"
+          },
+          "ipAddress": {
+            "maxLength": 39,
+            "minLength": 0,
+            "type": "string",
+            "description": "Provide the IP addressed captured when the onboarding data was submitted in your application"
+          }
+        },
+        "additionalProperties": false,
+        "description": "This must be an individual with greater than 25 % ownership or significant management responsibilities(CFO, CTO, etc.)"
+      },
+      "Transfers": {
+        "type": "object",
+        "properties": {
+          "bankName": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Name of bank to be used by ACHQ for transfers to/from merchant",
+            "nullable": true
+          },
+          "routingNumber": {
+            "maxLength": 9,
+            "minLength": 0,
+            "type": "string",
+            "description": "Bank routing (ABA) number to be used by ACHQ for transfers to/from merchant",
+            "nullable": true
+          },
+          "accountNumber": {
+            "maxLength": 30,
+            "minLength": 0,
+            "type": "string",
+            "description": "Bank account (DDA) number to be used by ACHQ for transfers to/from merchant",
+            "nullable": true
+          },
+          "tokenType": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": "string",
+            "description": "Use this field if passing in a Plaid processor token associated with the merchant's bank account. Accepted value is \"Plaid\"",
+            "nullable": true
+          },
+          "transferProcessorToken": {
+            "maxLength": 10,
+            "minLength": 0,
+            "type": "string",
+            "description": "Plaid token value",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "The merchant bank account to be used for deposits and outgoing payouts"
+      }
+    },
+    "securitySchemes": {
+      "ProviderID": {
+        "type": "apiKey",
+        "description": "ProviderID needed to access the endpoints.",
+        "name": "ProviderID",
+        "in": "header"
+      },
+      "Provider_GateID": {
+        "type": "apiKey",
+        "description": "Provider_GateID needed to access the endpoints.",
+        "name": "Provider_GateID",
+        "in": "header"
+      },
+      "Provider_GateKey": {
+        "type": "apiKey",
+        "description": "Provider_GateKey needed to access the endpoints.",
+        "name": "Provider_GateKey",
+        "in": "header"
+      }
+    }
+  },
+  "x-readme": {
+    "explorer-enabled": true,
+    "proxy-enabled": true
+  }
+}

@@ -1,0 +1,141 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "platform-api",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://www.speedchex.com/datalinks/transact.aspx"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "sec0": {
+        "type": "http",
+        "scheme": "basic"
+      }
+    }
+  },
+  "security": [
+    {
+      "sec0": []
+    }
+  ],
+  "paths": {
+    "/?hold": {
+      "post": {
+        "summary": "Hold a payment",
+        "description": "",
+        "operationId": "holdpayment",
+        "parameters": [
+          {
+            "name": "ProviderID",
+            "in": "query",
+            "description": "Your Platform ID as provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "99"
+            }
+          },
+          {
+            "name": "Provider_GateKey",
+            "in": "query",
+            "description": "Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "Provider_GateID",
+            "in": "query",
+            "description": "Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "MerchantID",
+            "in": "query",
+            "description": "Unique identifier for your customer. Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "2001"
+            }
+          },
+          {
+            "name": "Merchant_GateID",
+            "in": "query",
+            "description": "Gateway ID for your customer. Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "Merchant_GateKey",
+            "in": "query",
+            "description": "API Key for you customer. Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "CommandVersion",
+            "in": "query",
+            "description": "Use a value of 2.0 for this API version",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "2.0"
+            }
+          },
+          {
+            "name": "Command",
+            "in": "query",
+            "description": "Use value ECheck.Hold",
+            "schema": {
+              "type": "string",
+              "default": "ECheck.Hold"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "Transact_ReferenceID"
+                ],
+                "properties": {
+                  "Transact_ReferenceID": {
+                    "type": "string",
+                    "description": "The unique Transact_ReferenceID sent in the HTTP response when the payment was created. This value specifies the payment record you wish to cancel"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": []
+      }
+    }
+  },
+  "x-readme": {
+    "headers": [],
+    "explorer-enabled": true,
+    "proxy-enabled": true
+  },
+  "x-readme-fauxas": true
+}

@@ -1,0 +1,35 @@
+# The intentional differences between the vendored documentation and the crate.
+#
+# `cargo xtask conformance` (and `cargo test -p xtask`) checks each gateway request
+# type against its fragment in gateway/. Every difference must be listed here with
+# its reason, under `[gateway.<fragment name>]`:
+#
+#   missing  = { Wire = "reason" }   in the fragment, deliberately not sent
+#   extra    = { Wire = "reason" }   sent, though the fragment omits it
+#   required = { Wire = "reason" }   in both, but required differs
+#
+# An entry that no longer matches a difference is an error, as is a fragment that
+# is neither registered (in xtask/src/conformance.rs) nor listed in `unregistered`.
+
+# Fragments whose request types arrive in Stage 3; remove each as it is registered.
+unregistered = [
+    "bank-account-status",
+    "bankaccountid",
+    "bankpayment",
+    "banktoken",
+    "cancelpayment",
+    "eventmonitor",
+    "get-settlements",
+    "holdpayment",
+    "refundpayment",
+    "settlement-details",
+    "tokenizedpayment",
+    "updatepayment",
+]
+
+# Variant names for the industry table, by documented name, where the default
+# (heck's UpperCamelCase) reads badly.
+[industry.names]
+"NFTs / Digital Collectible" = "NftsDigitalCollectible"
+"SaaS and Software Applications" = "SaasAndSoftwareApplications"
+"Heating, Plumbing, A/C" = "HeatingPlumbingAc"

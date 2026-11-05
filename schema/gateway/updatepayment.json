@@ -1,0 +1,237 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "platform-api",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://www.speedchex.com/datalinks/transact.aspx"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "sec0": {
+        "type": "http",
+        "scheme": "basic"
+      }
+    }
+  },
+  "security": [
+    {
+      "sec0": []
+    }
+  ],
+  "paths": {
+    "/?update": {
+      "post": {
+        "summary": "Modify a payment",
+        "description": "",
+        "operationId": "updatepayment",
+        "parameters": [
+          {
+            "name": "ProviderID",
+            "in": "query",
+            "description": "Your Platform ID as provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "99"
+            }
+          },
+          {
+            "name": "Provider_GateKey",
+            "in": "query",
+            "description": "Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "Provider_GateID",
+            "in": "query",
+            "description": "Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "MerchantID",
+            "in": "query",
+            "description": "Unique identifier for your customer. Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "2001"
+            }
+          },
+          {
+            "name": "Merchant_GateID",
+            "in": "query",
+            "description": "Gateway ID for your customer. Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "Merchant_GateKey",
+            "in": "query",
+            "description": "API Key for you customer. Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "CommandVersion",
+            "in": "query",
+            "description": "Use a value of 2.0 for this API version",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "2.0"
+            }
+          },
+          {
+            "name": "Command",
+            "in": "query",
+            "description": "Use value ECheck.Update",
+            "schema": {
+              "type": "string",
+              "default": "ECheck.Update"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "Transact_ReferenceID"
+                ],
+                "properties": {
+                  "Transact_ReferenceID": {
+                    "type": "string",
+                    "description": "The unique Transact_ReferenceID sent in the HTTP response when the payment was created. This value specifies the payment record you wish to update"
+                  },
+                  "Provider_TransactionID": {
+                    "type": "string",
+                    "description": "An external ID which can be used for traceability between your application and ACHQ"
+                  },
+                  "Merchant_ReferenceID": {
+                    "type": "string",
+                    "description": "An external ID which can be used for traceability between the merchant and ACHQ"
+                  },
+                  "Amount": {
+                    "type": "string",
+                    "description": "The amount of the payment up with up to two decimal places"
+                  },
+                  "PaymentDirection": {
+                    "type": "string",
+                    "description": "FromCustomer or ToCustomer"
+                  },
+                  "Description": {
+                    "type": "string",
+                    "description": "Friendly internal description for this payment"
+                  },
+                  "SECCode": {
+                    "type": "string",
+                    "description": "Defines the type of authorization received by the Merchant for this transaction. PPD, CCD, WEB, or TEL"
+                  },
+                  "DateScheduled": {
+                    "type": "string",
+                    "description": "Use this parameter if you'd like to schedule a payment for a future date in MM/DD/YYYY format, otherwise the payment will be scheduled the day it is created"
+                  },
+                  "DeliveryWindow": {
+                    "type": "string",
+                    "description": "FirstAvailable or Standard.  Use FirstAvailable if attempting to hit a Same-Day ACH delivery window."
+                  },
+                  "Billing_CustomerName": {
+                    "type": "string",
+                    "description": "The individual or business that is being debited or credited"
+                  },
+                  "AccountType": {
+                    "type": "string",
+                    "description": "Checking or Savings"
+                  },
+                  "RoutingNumber": {
+                    "type": "string",
+                    "description": "Customer's bank routing number"
+                  },
+                  "AccountNumber": {
+                    "type": "string",
+                    "description": "Customer's bank account number"
+                  },
+                  "Billing_Address1": {
+                    "type": "string",
+                    "description": "Street address of customer"
+                  },
+                  "Billing_Address2": {
+                    "type": "string",
+                    "description": "Additional street address details"
+                  },
+                  "Billing_City": {
+                    "type": "string",
+                    "description": "City address details"
+                  },
+                  "Billing_State": {
+                    "type": "string",
+                    "description": "State address details"
+                  },
+                  "Billing_Zip": {
+                    "type": "string",
+                    "description": "Zip address details.  ##### or #####-####"
+                  },
+                  "Billing_Country": {
+                    "type": "string",
+                    "description": "2-letter country code (ISO 3166). Default is US"
+                  },
+                  "Billing_Email": {
+                    "type": "string",
+                    "description": "Customer's email address"
+                  },
+                  "Billing_Phone": {
+                    "type": "string",
+                    "description": "Customer's phone"
+                  },
+                  "Customer_IPAddress": {
+                    "type": "string",
+                    "description": "Customer’s IP Address."
+                  },
+                  "CheckType": {
+                    "type": "string",
+                    "description": "Type of bank account can be either Personal or Business"
+                  },
+                  "AccountToken": {
+                    "type": "string",
+                    "description": "Token associated with the bank account you wish to transact on"
+                  },
+                  "TokenSource": {
+                    "type": "string",
+                    "description": "Possible values are: ACHQ, Plaid, or MX"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": []
+      }
+    }
+  },
+  "x-readme": {
+    "headers": [],
+    "explorer-enabled": true,
+    "proxy-enabled": true
+  },
+  "x-readme-fauxas": true
+}

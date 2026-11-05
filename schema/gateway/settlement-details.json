@@ -1,0 +1,124 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "platform-api",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://www.speedchex.com/datalinks/transact.aspx"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "sec0": {
+        "type": "http",
+        "scheme": "basic"
+      }
+    }
+  },
+  "security": [
+    {
+      "sec0": []
+    }
+  ],
+  "paths": {
+    "/?settlementdetails": {
+      "post": {
+        "summary": "Get Settlement Details",
+        "description": "You must have a \"SettlementId\" from the Get a Settlement endpoint",
+        "operationId": "settlement-details",
+        "parameters": [
+          {
+            "name": "ProviderID",
+            "in": "query",
+            "description": "Your Platform ID as provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "99"
+            }
+          },
+          {
+            "name": "Provider_GateKey",
+            "in": "query",
+            "description": "Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "Provider_GateID",
+            "in": "query",
+            "description": "Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "CommandVersion",
+            "in": "query",
+            "description": "Use a value of 2.0 for this API version",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "2.0"
+            }
+          },
+          {
+            "name": "Command",
+            "in": "query",
+            "description": "Use value ECheckReports.GetSettlementItems",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "ECheckReports.GetSettlementItems"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "SettlementID"
+                ],
+                "properties": {
+                  "SettlementID": {
+                    "type": "string",
+                    "description": "Unique identifier for the specific settlement"
+                  },
+                  "PageSize": {
+                    "type": "integer",
+                    "description": "Number of items per page (up to 500 max)",
+                    "default": 500,
+                    "format": "int32"
+                  },
+                  "PageNumber": {
+                    "type": "integer",
+                    "description": "Page number for the report",
+                    "default": 1,
+                    "format": "int32"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": []
+      }
+    }
+  },
+  "x-readme": {
+    "headers": [],
+    "explorer-enabled": true,
+    "proxy-enabled": true
+  },
+  "x-readme-fauxas": true
+}

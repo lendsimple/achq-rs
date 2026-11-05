@@ -1,0 +1,152 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "platform-api",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://www.speedchex.com/datalinks/transact.aspx"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "sec0": {
+        "type": "http",
+        "scheme": "basic"
+      }
+    }
+  },
+  "security": [
+    {
+      "sec0": []
+    }
+  ],
+  "paths": {
+    "/?events": {
+      "post": {
+        "summary": "Payment Event Tracking",
+        "description": "",
+        "operationId": "eventmonitor",
+        "parameters": [
+          {
+            "name": "ProviderID",
+            "in": "query",
+            "description": "Your Platform ID as provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "99"
+            }
+          },
+          {
+            "name": "Provider_GateID",
+            "in": "query",
+            "description": "Platform API key provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "Provider_GateKey",
+            "in": "query",
+            "description": "Platform gateway key provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "MerchantID",
+            "in": "query",
+            "description": "Only set if you want to limit query results to a single merchant",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Command",
+            "in": "query",
+            "description": "Set to ECheckReports.StatusTrackingQuery",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "ECheckReports.StatusTrackingQuery"
+            }
+          },
+          {
+            "name": "CommandVersion",
+            "in": "query",
+            "description": "Set to 2.0 to enforce this API version",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "2.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "TrackingDate": {
+                    "type": "string",
+                    "description": "The date for which you want to retrieve status update information. MM/DD/YYYY or MMDDYYYY",
+                    "default": "06172022"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "400",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Result": {
+                    "value": "{}"
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": []
+      }
+    }
+  },
+  "x-readme": {
+    "headers": [],
+    "explorer-enabled": true,
+    "proxy-enabled": true
+  },
+  "x-readme-fauxas": true
+}

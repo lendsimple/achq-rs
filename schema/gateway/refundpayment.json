@@ -1,0 +1,161 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "platform-api",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://www.speedchex.com/datalinks/transact.aspx"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "sec0": {
+        "type": "http",
+        "scheme": "basic"
+      }
+    }
+  },
+  "security": [
+    {
+      "sec0": []
+    }
+  ],
+  "paths": {
+    "/?refund": {
+      "post": {
+        "summary": "Refund a payment",
+        "description": "",
+        "operationId": "refundpayment",
+        "parameters": [
+          {
+            "name": "ProviderID",
+            "in": "query",
+            "description": "Your Platform ID as provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "99"
+            }
+          },
+          {
+            "name": "Provider_GateKey",
+            "in": "query",
+            "description": "Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "Provider_GateID",
+            "in": "query",
+            "description": "Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "MerchantID",
+            "in": "query",
+            "description": "Unique identifier for your customer. Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "2001"
+            }
+          },
+          {
+            "name": "Merchant_GateID",
+            "in": "query",
+            "description": "Gateway ID for your customer. Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "Merchant_GateKey",
+            "in": "query",
+            "description": "API Key for you customer. Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "CommandVersion",
+            "in": "query",
+            "description": "Use a value of 2.0 for this API version",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "2.0"
+            }
+          },
+          {
+            "name": "Command",
+            "in": "query",
+            "description": "Use value ECheck.Refund",
+            "schema": {
+              "type": "string",
+              "default": "ECheck.Refund"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "TransAct_ReferenceID"
+                ],
+                "properties": {
+                  "TransAct_ReferenceID": {
+                    "type": "string",
+                    "description": "The unique Transact_ReferenceID sent in the HTTP response when the payment was created. This value specifies the payment record you wish to refund"
+                  },
+                  "Provider_TransactionID": {
+                    "type": "string",
+                    "description": "An external ID which can be used for traceability between your application and ACHQ"
+                  },
+                  "Merchant_ReferenceID": {
+                    "type": "string",
+                    "description": "An external ID which can be used for traceability between the merchant and ACHQ"
+                  },
+                  "Amount": {
+                    "type": "string",
+                    "description": "Use this field if you need to specify a refund amount less than the original debit amount"
+                  },
+                  "Description": {
+                    "type": "string",
+                    "description": "Friendly internal description for this payment"
+                  },
+                  "DateScheduled": {
+                    "type": "string",
+                    "description": "Use this parameter if you'd like to schedule a payment for a future date in MM/DD/YYYY format, otherwise the payment will be scheduled the day it is created"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": []
+      }
+    }
+  },
+  "x-readme": {
+    "headers": [],
+    "explorer-enabled": true,
+    "proxy-enabled": true
+  },
+  "x-readme-fauxas": true
+}

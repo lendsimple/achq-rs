@@ -29,3 +29,9 @@ the crates follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `achq-derive`: `#[derive(Model)]`, implementing `Validate` and a redacting
   `Debug`, and with `#[achq(form)]` also `ToForm`: wire names, flattened structs
   with a prefix (`Billing_`), `with` formats, and a description of each field.
+- `onboarding::Industry` and `onboarding::IndustryCategory` (feature `onboarding`,
+  on by default): the onboarding API's 150 documented industries in 13
+  categories, generated from its documentation, with their names, each
+  industry's category, and parsing by name.
+- The ACHQ API reference's OpenAPI fragments and industry table, vendored in
+  `schema/` with their sources and checksums.

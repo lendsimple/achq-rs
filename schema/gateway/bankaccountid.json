@@ -1,0 +1,218 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "platform-api",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://www.speedchex.com/datalinks/transact.aspx"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "sec0": {
+        "type": "http",
+        "scheme": "basic"
+      }
+    }
+  },
+  "security": [
+    {
+      "sec0": []
+    }
+  ],
+  "paths": {
+    "/?bankID": {
+      "post": {
+        "summary": "Bank account ID",
+        "description": "First uses the routing and account number to provide real-time account status for consumer and business accounts\n\nIf the account is valid, verifies your customer is an authorized signatory on a bank account to confirm transactional authority on the account prior to processing a payment.",
+        "operationId": "bankaccountid",
+        "parameters": [
+          {
+            "name": "ProviderID",
+            "in": "query",
+            "description": "Your Platform ID as provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "99"
+            }
+          },
+          {
+            "name": "Provider_GateKey",
+            "in": "query",
+            "description": "Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "Provider_GateID",
+            "in": "query",
+            "description": "Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "MerchantID",
+            "in": "query",
+            "description": "Unique identifier for your customer. Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "2001"
+            }
+          },
+          {
+            "name": "Merchant_GateID",
+            "in": "query",
+            "description": "Gateway ID for you customer. Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "Merchant_GateKey",
+            "in": "query",
+            "description": "API Key for you customer. Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "CommandVersion",
+            "in": "query",
+            "description": "Use a value of 2.0 for this API version",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "2.0"
+            }
+          },
+          {
+            "name": "Command",
+            "in": "query",
+            "description": "Use value ECheck.VerifyPlus",
+            "schema": {
+              "type": "string",
+              "default": "ECheck.VerifyPlus"
+            }
+          },
+          {
+            "name": "OwnerAuth",
+            "in": "query",
+            "description": "Set to On  to authenticate bank account ownership.",
+            "schema": {
+              "type": "string",
+              "default": "On"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "RoutingNumber",
+                  "AccountNumber"
+                ],
+                "properties": {
+                  "Provider_TransactionID": {
+                    "type": "string",
+                    "description": "An external ID which can be used for traceability between your application and ACHQ",
+                    "default": "21321312"
+                  },
+                  "RoutingNumber": {
+                    "type": "string",
+                    "description": "Bank routing number",
+                    "default": "123123123"
+                  },
+                  "AccountNumber": {
+                    "type": "string",
+                    "description": "Bank account number",
+                    "default": "123456789"
+                  },
+                  "CustomerName": {
+                    "type": "string",
+                    "description": "Name of person on bank account if this is a personal account",
+                    "default": "Bob Loblaw"
+                  },
+                  "Company": {
+                    "type": "string",
+                    "description": "Company name on bank account if this is a business account"
+                  },
+                  "Address1": {
+                    "type": "string",
+                    "description": "Street address on bank account"
+                  },
+                  "Address2": {
+                    "type": "string",
+                    "description": "Additional address information"
+                  },
+                  "City": {
+                    "type": "string",
+                    "description": "Account holder city"
+                  },
+                  "State": {
+                    "type": "string",
+                    "description": "Account holder state"
+                  },
+                  "Zip": {
+                    "type": "string",
+                    "description": "Account holder zip"
+                  },
+                  "Country": {
+                    "type": "string",
+                    "description": "Account holder's country. Only US and CA are supported"
+                  },
+                  "Phone Number": {
+                    "type": "integer",
+                    "description": "Account holder's phone number - max length 10. Do not include country code.",
+                    "format": "int32"
+                  },
+                  "TaxID": {
+                    "type": "string",
+                    "description": "SSN/Last 4 or Employer Identification Number"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "200",
+            "content": {
+              "text/plain": {
+                "examples": {
+                  "Result": {
+                    "value": ""
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": []
+      }
+    }
+  },
+  "x-readme": {
+    "headers": [],
+    "explorer-enabled": true,
+    "proxy-enabled": true
+  },
+  "x-readme-fauxas": true
+}

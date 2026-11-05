@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["achq", "achq-derive"]
+members = ["achq", "achq-derive", "xtask"]
 
 [workspace.package]
 edition = "2024"

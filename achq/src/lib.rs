@@ -10,6 +10,8 @@
 //!   hidden from logs.
 //! - [`validate`]: checks of the API's constraints, collecting every violation
 //!   with the path of the field.
+//! - `onboarding` (feature `onboarding`, on by default): the industry table a
+//!   merchant application classifies the business with.
 //!
 //! The gateway keys grant access to merchants' bank payments: keep them on a
 //! server. The WebAssembly builds are for servers, edge workers and WASI hosts,
@@ -23,6 +25,9 @@ extern crate self as achq;
 
 pub mod form;
 mod macros;
+#[cfg(feature = "onboarding")]
+#[cfg_attr(docsrs, doc(cfg(feature = "onboarding")))]
+pub mod onboarding;
 pub mod types;
 pub mod validate;
 

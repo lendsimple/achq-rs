@@ -4,3 +4,7 @@
 *.rs text eol=lf
 *.snap text eol=lf
 *.stderr text eol=lf
+schema/** -text
+
+# Output of `cargo xtask codegen`; collapsed in diffs.
+achq/src/onboarding/industry.rs linguist-generated=true

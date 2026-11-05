@@ -1,0 +1,271 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "platform-api",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://www.speedchex.com/datalinks/transact.aspx"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "sec0": {
+        "type": "http",
+        "scheme": "basic"
+      }
+    }
+  },
+  "security": [
+    {
+      "sec0": []
+    }
+  ],
+  "paths": {
+    "/?bankaccountpayment": {
+      "post": {
+        "summary": "Create a payment (bank account)",
+        "description": "",
+        "operationId": "bankpayment",
+        "parameters": [
+          {
+            "name": "ProviderID",
+            "in": "query",
+            "description": "Your Platform ID as provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "99"
+            }
+          },
+          {
+            "name": "Provider_GateKey",
+            "in": "query",
+            "description": "Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "Provider_GateID",
+            "in": "query",
+            "description": "Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "MerchantID",
+            "in": "query",
+            "description": "Unique identifier for your customer. Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "2001"
+            }
+          },
+          {
+            "name": "Merchant_GateID",
+            "in": "query",
+            "description": "Gateway ID for your customer. Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "Merchant_GateKey",
+            "in": "query",
+            "description": "API Key for you customer. Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "CommandVersion",
+            "in": "query",
+            "description": "Use a value of 2.0 for this API version",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "2.0"
+            }
+          },
+          {
+            "name": "Command",
+            "in": "query",
+            "description": "Use value ECheck.ProcessPayment",
+            "schema": {
+              "type": "string",
+              "default": "ECheck.ProcessPayment"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "Amount",
+                  "PaymentDirection",
+                  "SECCode",
+                  "DeliveryWindow",
+                  "Billing_CustomerName",
+                  "AccountType",
+                  "RoutingNumber",
+                  "AccountNumber",
+                  "Billing_Address1",
+                  "Billing_City",
+                  "Billing_State",
+                  "Billing_Zip",
+                  "Billing_Email",
+                  "Billing_Phone",
+                  "Customer_IPAddress",
+                  "SendEmailToCustomer",
+                  "CheckType",
+                  "Create_ACHQToken"
+                ],
+                "properties": {
+                  "Provider_TransactionID": {
+                    "type": "string",
+                    "description": "An external ID which can be used for traceability between your application and ACHQ",
+                    "default": "21321312"
+                  },
+                  "Merchant_ReferenceID": {
+                    "type": "string",
+                    "description": "An external ID which can be used for traceability between the merchant and ACHQ"
+                  },
+                  "Amount": {
+                    "type": "string",
+                    "description": "The amount of the payment up with up to two decimal places",
+                    "default": "42.00"
+                  },
+                  "PaymentDirection": {
+                    "type": "string",
+                    "description": "FromCustomer or ToCustomer",
+                    "default": "FromCustomer"
+                  },
+                  "Description": {
+                    "type": "string",
+                    "description": "Friendly internal description for this payment",
+                    "default": "Rent Payment"
+                  },
+                  "SECCode": {
+                    "type": "string",
+                    "description": "Defines the type of authorization received by the Merchant for this transaction. PPD, CCD, WEB, or TEL",
+                    "default": "WEB"
+                  },
+                  "DateScheduled": {
+                    "type": "string",
+                    "description": "Use this parameter if you'd like to schedule a payment for a future date in MM/DD/YYYY format, otherwise the payment will be scheduled the day it is created"
+                  },
+                  "DeliveryWindow": {
+                    "type": "string",
+                    "description": "FirstAvailable or Standard.  Use FirstAvailable if attempting to hit a Same-Day ACH delivery window.",
+                    "default": "Standard"
+                  },
+                  "Billing_CustomerName": {
+                    "type": "string",
+                    "description": "The individual or business that is being debited or credited",
+                    "default": "Bob Loblaw"
+                  },
+                  "AccountType": {
+                    "type": "string",
+                    "description": "Checking or Savings",
+                    "default": "Checking"
+                  },
+                  "RoutingNumber": {
+                    "type": "string",
+                    "description": "Customer's bank routing number",
+                    "default": "123123123"
+                  },
+                  "AccountNumber": {
+                    "type": "string",
+                    "description": "Customer's bank account number",
+                    "default": "12345678"
+                  },
+                  "Billing_Address1": {
+                    "type": "string",
+                    "description": "Street address of customer",
+                    "default": "123 Street"
+                  },
+                  "Billing_Address2": {
+                    "type": "string",
+                    "description": "Additional street address details"
+                  },
+                  "Billing_City": {
+                    "type": "string",
+                    "description": "City address details",
+                    "default": "Town"
+                  },
+                  "Billing_State": {
+                    "type": "string",
+                    "description": "State address details",
+                    "default": "NY"
+                  },
+                  "Billing_Zip": {
+                    "type": "string",
+                    "description": "Zip address details.  ##### or #####-####",
+                    "default": "12345"
+                  },
+                  "Billing_Country": {
+                    "type": "string",
+                    "description": "2-letter country code (ISO 3166). Default is US",
+                    "default": "US"
+                  },
+                  "Billing_Email": {
+                    "type": "string",
+                    "description": "Customer's email address",
+                    "default": "lawblog@legal.com"
+                  },
+                  "Billing_Phone": {
+                    "type": "string",
+                    "description": "Customer's phone",
+                    "default": "111-867-5309"
+                  },
+                  "Customer_IPAddress": {
+                    "type": "string",
+                    "description": "Customer’s IP Address.",
+                    "default": "0.0.0.0"
+                  },
+                  "SendEmailToCustomer": {
+                    "type": "string",
+                    "description": "Optionally have ACHQ send a payment notification email to the customer",
+                    "default": "No"
+                  },
+                  "CheckType": {
+                    "type": "string",
+                    "description": "Type of bank account can be either Personal or Business",
+                    "default": "Personal"
+                  },
+                  "Create_ACHQToken": {
+                    "type": "string",
+                    "description": "Creates and returns an encrypted token associated with the customer's bank account to be stored for future use",
+                    "default": "Yes"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": []
+      }
+    }
+  },
+  "x-readme": {
+    "headers": [],
+    "explorer-enabled": true,
+    "proxy-enabled": true
+  },
+  "x-readme-fauxas": true
+}

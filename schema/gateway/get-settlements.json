@@ -1,0 +1,124 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "platform-api",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://www.speedchex.com/datalinks/transact.aspx"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "sec0": {
+        "type": "http",
+        "scheme": "basic"
+      }
+    }
+  },
+  "security": [
+    {
+      "sec0": []
+    }
+  ],
+  "paths": {
+    "/?settlements": {
+      "post": {
+        "summary": "Get Settlements",
+        "description": "Lookup settlement records for merchants",
+        "operationId": "get-settlements",
+        "parameters": [
+          {
+            "name": "ProviderID",
+            "in": "query",
+            "description": "Your Platform ID as provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "99"
+            }
+          },
+          {
+            "name": "Provider_GateKey",
+            "in": "query",
+            "description": "Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "Provider_GateID",
+            "in": "query",
+            "description": "Provided by ACHQ",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "test"
+            }
+          },
+          {
+            "name": "CommandVersion",
+            "in": "query",
+            "description": "Use a value of 2.0 for this API version",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "2.0"
+            }
+          },
+          {
+            "name": "Command",
+            "in": "query",
+            "description": "Use value ECheckReports.GetSettlements",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "ECheckReports.GetSettlements"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "DateFrom",
+                  "DateTo"
+                ],
+                "properties": {
+                  "DateFrom": {
+                    "type": "string",
+                    "description": "The beginning date in the date range you want to query. Traditional and ISO 8601 date formats accepted.",
+                    "format": "date"
+                  },
+                  "DateTo": {
+                    "type": "string",
+                    "description": "The ending date in the date range you want to query. Traditional and ISO 8601 date formats accepted",
+                    "format": "date"
+                  },
+                  "MerchantID": {
+                    "type": "integer",
+                    "description": "Limit the results to a single ACHQ merchant account",
+                    "format": "int32"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false,
+        "security": []
+      }
+    }
+  },
+  "x-readme": {
+    "headers": [],
+    "explorer-enabled": true,
+    "proxy-enabled": true
+  },
+  "x-readme-fauxas": true
+}
