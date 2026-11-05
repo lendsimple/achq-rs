@@ -282,6 +282,16 @@ mod tests {
     }
 
     #[test]
+    fn every_gateway_fragment_is_registered() {
+        assert!(load_overrides().unwrap().unregistered.is_empty());
+        let registry = conformance::registry();
+        assert_eq!(registry.len(), 12);
+        for (op, fields) in &registry {
+            assert!(!fields.is_empty(), "{op} writes no fields");
+        }
+    }
+
+    #[test]
     fn the_readme_lists_every_source() {
         let readme = read(&schema_dir().join("README.md")).unwrap();
         for source in SOURCES {

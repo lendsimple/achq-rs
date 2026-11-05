@@ -1,0 +1,36 @@
+---
+source: achq/tests/requests.rs
+expression: "encode(&payments::CreatePayment::new(&request), &merchant())"
+---
+POST https://www.speedchex.com/datalinks/transact.aspx
+accept: application/json
+content-type: application/x-www-form-urlencoded
+user-agent: achq-rs/test
+
+ProviderID=99
+Provider_GateID=provider-gate
+Provider_GateKey=<key>
+MerchantID=2001
+Merchant_GateID=merchant-gate
+Merchant_GateKey=<key>
+Command=ECheck.ProcessPayment
+CommandVersion=2.0
+Provider_TransactionID=21321312
+Amount=42.00
+PaymentDirection=ToCustomer
+Description=Rent Payment
+SECCode=CCD
+DeliveryWindow=Standard
+Billing_CustomerName=Bob Loblaw
+Billing_Company=Bluth Company
+Billing_Address1=123 Street
+Billing_City=Town
+Billing_State=NY
+Billing_Zip=12345
+Billing_Country=US
+Billing_Phone=111-867-5309
+Billing_Email=lawblog@legal.com
+Customer_IPAddress=203.0.113.9
+SendEmailToCustomer=No
+AccountToken=achq-sandbox-3ff6d-b64fd-5a8a5
+TokenSource=ACHQ

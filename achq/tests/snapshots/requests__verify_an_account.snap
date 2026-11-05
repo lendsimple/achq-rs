@@ -1,0 +1,19 @@
+---
+source: achq/tests/requests.rs
+expression: "encode(&insights::VerifyAccount::new(&request), &merchant())"
+---
+POST https://www.speedchex.com/datalinks/transact.aspx
+accept: application/json
+content-type: application/x-www-form-urlencoded
+user-agent: achq-rs/test
+
+ProviderID=99
+Provider_GateID=provider-gate
+Provider_GateKey=<key>
+MerchantID=2001
+Merchant_GateID=merchant-gate
+Merchant_GateKey=<key>
+Command=ECheck.VerifyPlus
+CommandVersion=2.0
+RoutingNumber=123123123
+AccountNumber=123456789

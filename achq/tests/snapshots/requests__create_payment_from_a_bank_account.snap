@@ -1,0 +1,38 @@
+---
+source: achq/tests/requests.rs
+expression: "encode(&payments::CreatePayment::new(&bank_payment()), &merchant())"
+---
+POST https://www.speedchex.com/datalinks/transact.aspx
+accept: application/json
+content-type: application/x-www-form-urlencoded
+user-agent: achq-rs/test
+
+ProviderID=99
+Provider_GateID=provider-gate
+Provider_GateKey=<key>
+MerchantID=2001
+Merchant_GateID=merchant-gate
+Merchant_GateKey=<key>
+Command=ECheck.ProcessPayment
+CommandVersion=2.0
+Provider_TransactionID=21321312
+Amount=42.00
+PaymentDirection=FromCustomer
+Description=Rent Payment
+SECCode=WEB
+DeliveryWindow=Standard
+Billing_CustomerName=Bob Loblaw
+Billing_Address1=123 Street
+Billing_City=Town
+Billing_State=NY
+Billing_Zip=12345
+Billing_Country=US
+Billing_Phone=111-867-5309
+Billing_Email=lawblog@legal.com
+Customer_IPAddress=203.0.113.9
+SendEmailToCustomer=No
+RoutingNumber=123123123
+AccountNumber=12345678
+AccountType=Checking
+CheckType=Personal
+Create_ACHQToken=Yes

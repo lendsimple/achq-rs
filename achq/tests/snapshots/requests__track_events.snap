@@ -1,0 +1,15 @@
+---
+source: achq/tests/requests.rs
+expression: "encode(&events::TrackEvents::new(&query), &platform())"
+---
+POST https://www.speedchex.com/datalinks/transact.aspx
+accept: application/json
+content-type: application/x-www-form-urlencoded
+user-agent: achq-rs/test
+
+ProviderID=99
+Provider_GateID=provider-gate
+Provider_GateKey=<key>
+Command=ECheckReports.StatusTrackingQuery
+CommandVersion=2.0
+TrackingDate=06172022

@@ -1,0 +1,36 @@
+{
+  "CommandStatus": "Approved",
+  "Description": "Command Successful. Approved.",
+  "ErrorInformation": null,
+  "ExpressVerify": {
+    "Status": null,
+    "Code": null,
+    "Description": null
+  },
+  "ResponseData": [
+    {
+      "SettlementID": "64b7811c-f631-4bc6-9eaf-d2f45356cf9e",
+      "MerchantID": "2001",
+      "SettlementType": "Settlement for ACH Debits",
+      "EffectiveDate": "2023-12-01T00:00:00",
+      "Amount": 55300.19,
+      "TransferDirection": "Credit",
+      "ItemCount": 21,
+      "BankDescriptorID": null
+    },
+    {
+      "SettlementID": "797b23ab-9e0f-40cb-a485-b361f0427b75",
+      "MerchantID": "2001",
+      "SettlementType": "Offset for ACH Credits",
+      "EffectiveDate": "2023-12-01T00:00:00",
+      "Amount": 36.4,
+      "TransferDirection": "Debit",
+      "ItemCount": 6,
+      "BankDescriptorID": null
+    }
+  ],
+  "ACHQToken": null,
+  "Provider_TransactionID": null,
+  "TransAct_ReferenceID": "19023039",
+  "ResponseCode": "000"
+}

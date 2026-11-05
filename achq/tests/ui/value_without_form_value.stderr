@@ -10,12 +10,12 @@ error[E0277]: `bool` has no single form encoding
   = help: the trait `FormValue` is not implemented for `bool`
   = note: choose a format with `with = "..."`: `yes_no` or `on_off` for a `bool`, `mdy_slash`, `mdy` or `iso_date` for a `Date`
   = help: the following other types implement trait `FormValue`:
+            AccountToken
+            AccountType
             AchqToken
             Amount
+            CheckType
             CommandId
-            FeeProfileId
-            IpAddr
-            Ipv4Addr
-            MerchantId
-            MerchantReferenceId
+            CommandStatus
+            DeliveryWindow
           and $N others

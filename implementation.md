@@ -460,7 +460,60 @@ let token: Option<AchqToken> = created.token;
 - `events_csv.rs`: the full doc sample and the orkestra samples, plus the error trailer, an unknown event, and an `Authorization` row.
 - Declined bad-credentials → `Error::Api` with `field() == Some("Provider_Credentials")`.
 
-**Status**: Not Started
+**Status**: Complete
+
+**Notes (as built)**:
+- **Operations:** 11 operations in 5 resources, from a hand-written `operation_table!` in `operations.rs`.
+  - The resources are tokens, payments, insights, settlements and events.
+  - The table is consumed by `impl_operations!`. It is also `pub(crate)` re-exported for the Stage 4 handles, with `#[allow(unused_imports)]` until then.
+  - Each operation is `Name<'a>`, with private ID fields, a borrowed body and `new(ids…, &body)`.
+  - Table syntax: `command`, `scope: Merchant|Platform`, `extra: [("OwnerAuth", "On")]`, `fields: { payment_id: PaymentId = "Transact_ReferenceID", }`, `body: [T]` and `response: T`.
+  - Responses decode through a hidden `Decode` trait, which `Vec<Settlement>` also implements, so no response-kind syntax is needed.
+- **The `Operation` trait:** `Response`, `NAME`, `COMMAND`, `SCOPE`, the hidden `EXTRA`, `validate`, the hidden `write_form`, `form_fields` (for conformance) and `decode`.
+- **`protocol`:**
+  - **`encode`:** validates, and adds a violation `merchant credentials: are required for payments.cancel` for a merchant-scoped op without a merchant.
+  - **`encode_unvalidated`:** returns `HttpRequest` directly, since it cannot fail.
+  - **`protocol::form(op, ctx)`:** the public `FormWriter`, for logging the redacted body in Stage 4.
+  - **Body order:** credentials, then `Command`, `CommandVersion=2.0`, `TestMode=On` (when set), the extras and the op fields. Nothing goes in the URL; `ResponseType=JSON` is not sent.
+- **JSON detection:** JSON is recognized by the first non-whitespace byte `{`, whatever the `Content-Type`. A mislabeled JSON body is still read (tested), and an HTML page becomes `UnexpectedContentType`.
+- **`UnexpectedContentType` fields:** it gained `expected` ("JSON" or "CSV") and `body` (an excerpt), which the plan didn't have.
+- **`Envelope<D>`:**
+  - Every field is optional, plus `other` (via `#[serde(flatten)]`).
+  - `TransAct_ReferenceID` and its alias `Transact_ReferenceID` both work alongside the flatten; a unit test pins this.
+  - The data is parsed once as a `Value`, then mapped with `map_data`.
+- **`ResponseCode(u16)`:** 31 named constants (the documented codes) with `description()`, displayed as 3 digits.
+- **`ApiError`:** wraps the envelope and the HTTP status. Display: `Declined [100] Invalid Gateway Credentials (Provider_Credentials)`, which falls back to the documented description when the gateway sends none.
+- **Credentials:**
+  - `ProviderCredentials` and `MerchantCredentials`, each with `sandbox()`, holding the key in a `SecretString` (re-exported).
+  - `Endpoints { gateway, api }` with `Endpoints::custom`, and the constants `GATEWAY_URL` and `API_URL`.
+- **Models:** in `bank`, `payments`, `tokens`, `insights`, `settlements` and `events`. Requests are `Model` + `bon::Builder` + `#[achq(form)]`.
+  - **`PaymentSource`:** an enum with hand-written `ToForm` and `Validate`. Its `form_fields` lists both kinds' fields, and xtask filters them per fragment.
+  - **`AccountToken`:** a new sensitive ID.
+  - **Account numbers:** only their length (30) is checked. A NACHA account may contain letters, so the planned `digits` rule was dropped.
+  - **Cross-field checks** (`check = …`): a business account needs `Billing_Company`; WEB needs `Customer_IPAddress`; the IP must be ≤ 15 characters, which in practice means IPv4 (the IPv6 open item remains); an update needs at least one change.
+  - **Response rows** (`Settlement`, `SettlementItem`, `SettlementDetailsPage`) are all `Option`, as planned. Success types (`PaymentCreated`, `CommandReceipt`, `TokenCreated`) require their reference ID, or `Error::Decode`.
+  - **`AccountVerification` and `OwnerVerification`** keep the whole `Envelope<IgnoredAny>`. `OwnerAuth` is read from a top-level key, pending the Stage 5 sandbox run.
+- **Events:**
+  - The CSV `Command Response` trailer becomes the envelope; a declined trailer is `Error::Api`.
+  - Rows of exactly 10 fields use orkestra's layout; anything else uses the documented 11.
+  - Rows with fewer than 6 fields, or a bad event time, are `Error::Decode` with the line number.
+  - The enums match case-insensitively and include the undocumented `Authorization`/`Authorized`.
+  - `ReturnCode` has the 13 documented R-codes.
+- **Ergonomic constructors**, pulled forward from Stage 5 because they were trivial: `BankAccount::checking/savings/business/personal/last_four`, `PaymentSource::bank/token/achq_token/tokenize`, `RefundRequest::full/partial`, `SettlementQuery::between/merchant`, `SettlementDetailsQuery::new/page`, `EventQuery::on/merchant`, and `TokenRequest: From<BankAccount>`.
+- **Derive fix:** the fields of an **optional flattened struct** are now described as optional. Conformance caught this: `PaymentUpdate`'s `Option<PaymentSource>` showed its account fields as required. The Stage 1 `form_derive` expectation that pinned the bug was corrected.
+- **Conformance:** all 12 fragments are registered and `unregistered` is empty. `schema/overrides.toml` holds 18 differences, each with the guide that documents it (required/extra on bankpayment, tokenizedpayment, updatepayment, banktoken and eventmonitor).
+- **Fixtures (`tests/data/README.md` lists the provenance):**
+  - 9 guide samples; two had JSON typos repaired (a missing and a stray `}`);
+  - 3 orkestra-derived envelopes;
+  - synthesized: an Express Verify reject, an IIS page, and four event edge cases;
+  - the 89-row docs event sample.
+- **Tests:**
+  - 81 unit tests;
+  - integration: `requests` 19 (15 insta snapshots, checked against the guides' curl examples), `responses` 16, `events_csv` 7, `form_derive` 6, `model_derive` 7, `derive_ui` 1;
+  - xtask 30;
+  - 8 doctests.
+  - The `value_without_form_value` UI snapshot was regenerated, because rustc's list of implementors grew.
+- **Verified:** the same matrix as Stage 2 (fmt, clippy ×3, tests with all features and none, MSRV, minimal versions, both wasm targets with and without onboarding, docs and docs.rs, deny, codegen, conformance, drift).
 
 ## Stage 4: Async + blocking clients, transports, wasm
 **Goal**:

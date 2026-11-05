@@ -1,0 +1,17 @@
+---
+source: achq/tests/requests.rs
+expression: "encode(&settlements::SettlementDetails::new(&query), &platform())"
+---
+POST https://www.speedchex.com/datalinks/transact.aspx
+accept: application/json
+content-type: application/x-www-form-urlencoded
+user-agent: achq-rs/test
+
+ProviderID=99
+Provider_GateID=provider-gate
+Provider_GateKey=<key>
+Command=ECheckReports.GetSettlementItems
+CommandVersion=2.0
+SettlementID=64b7811c-f631-4bc6-9eaf-d2f45356cf9e
+PageSize=500
+PageNumber=1

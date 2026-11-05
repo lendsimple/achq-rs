@@ -1,0 +1,18 @@
+---
+source: achq/tests/requests.rs
+expression: "encode(&payments::HoldPayment::new(\"14477207\"), &merchant())"
+---
+POST https://www.speedchex.com/datalinks/transact.aspx
+accept: application/json
+content-type: application/x-www-form-urlencoded
+user-agent: achq-rs/test
+
+ProviderID=99
+Provider_GateID=provider-gate
+Provider_GateKey=<key>
+MerchantID=2001
+Merchant_GateID=merchant-gate
+Merchant_GateKey=<key>
+Command=ECheck.Hold
+CommandVersion=2.0
+Transact_ReferenceID=14477207

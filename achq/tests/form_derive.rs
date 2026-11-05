@@ -145,8 +145,9 @@ fn describes_its_fields() {
             field("Billing_Address2", false, Some(40), false),
             field("Billing_Zip", true, None, false),
             field("Customer_IPAddress", true, None, false),
-            field("RoutingNumber", true, None, false),
-            field("AccountNumber", true, Some(30), true),
+            // In an `Option<BankAccount>`, so optional.
+            field("RoutingNumber", false, None, false),
+            field("AccountNumber", false, Some(30), true),
             field("SendEmailToCustomer", true, None, false),
         ]
     );

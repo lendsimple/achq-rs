@@ -1,0 +1,4 @@
+14460001,order-7,2001,Returned-NSF,06/18/2022 09:12:44,Returned-NSF,R01,"Insufficient Funds, retry later",POS,1111,Pass AV
+14460002,,2001,Charged Back,06/18/2022 10:00:00,Charged Back,R10,Customer Advises Not Authorized,,,
+14460003,,2001,Hold Released,06/18/2022 11:00:00,Scheduled,,,,,
+Command Response,Approved,000,Command Successful. Approved.,,19000001,,,

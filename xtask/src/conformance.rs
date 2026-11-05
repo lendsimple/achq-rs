@@ -10,7 +10,10 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use achq::form::{FieldMeta, ToForm};
+use achq::Operation;
+use achq::form::FieldMeta;
+#[cfg(test)]
+use achq::form::ToForm;
 use serde_json::Value;
 
 use crate::overrides::{OpOverrides, Overrides};
@@ -51,17 +54,59 @@ impl Fragment {
     }
 }
 
-/// The request type of each gateway operation, by fragment name.
+/// The form fields of each gateway operation, by fragment name.
 ///
-/// Each type arrives with its operation in Stage 3, which removes the operation
-/// from `unregistered` in `schema/overrides.toml` as it adds the line here:
-/// `("bankpayment", fields::<achq::payments::PaymentRequest>())`.
+/// `ECheck.ProcessPayment` has two fragments, one per kind of payment source;
+/// each is compared with the operation's fields for its kind.
 pub fn registry() -> Vec<(&'static str, Vec<FieldMeta>)> {
-    vec![]
+    use achq::operations::{events, insights, payments, settlements, tokens};
+
+    const TOKEN_FIELDS: &[&str] = &["AccountToken", "TokenSource"];
+    const BANK_FIELDS: &[&str] = &[
+        "RoutingNumber",
+        "AccountNumber",
+        "AccountType",
+        "CheckType",
+        "Create_ACHQToken",
+    ];
+    vec![
+        ("banktoken", op::<tokens::CreateToken>()),
+        (
+            "bankpayment",
+            without(op::<payments::CreatePayment>(), TOKEN_FIELDS),
+        ),
+        (
+            "tokenizedpayment",
+            without(op::<payments::CreatePayment>(), BANK_FIELDS),
+        ),
+        ("updatepayment", op::<payments::UpdatePayment>()),
+        ("cancelpayment", op::<payments::CancelPayment>()),
+        ("holdpayment", op::<payments::HoldPayment>()),
+        ("refundpayment", op::<payments::RefundPayment>()),
+        ("get-settlements", op::<settlements::ListSettlements>()),
+        ("settlement-details", op::<settlements::SettlementDetails>()),
+        ("eventmonitor", op::<events::TrackEvents>()),
+        ("bank-account-status", op::<insights::VerifyAccount>()),
+        ("bankaccountid", op::<insights::VerifyOwner>()),
+    ]
+}
+
+/// The form fields an operation writes: its ID fields, then its body's.
+fn op<O: Operation>() -> Vec<FieldMeta> {
+    let mut out = Vec::new();
+    O::form_fields(&mut out);
+    out
+}
+
+fn without(fields: Vec<FieldMeta>, names: &[&str]) -> Vec<FieldMeta> {
+    fields
+        .into_iter()
+        .filter(|field| !names.contains(&field.wire.as_str()))
+        .collect()
 }
 
 /// The form fields `T` writes.
-#[cfg_attr(not(test), allow(dead_code))] // Used by `registry` from Stage 3.
+#[cfg(test)]
 pub fn fields<T: ToForm>() -> Vec<FieldMeta> {
     let mut out = Vec::new();
     T::form_fields("", &mut out);

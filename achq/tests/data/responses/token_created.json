@@ -1,0 +1,15 @@
+{
+  "CommandStatus": "Approved",
+  "Description": "Command Successful.  Approved.",
+  "ErrorInformation": null,
+  "ExpressVerify": {
+    "Status": null,
+    "Code": null,
+    "Description": null
+  },
+  "ResponseData": null,
+  "ACHQToken": "achq-sandbox-3ff6d-b64fd-5a8a5",
+  "Provider_TransactionID": "21321312",
+  "TransAct_ReferenceID": "14469220",
+  "ResponseCode": "000"
+}

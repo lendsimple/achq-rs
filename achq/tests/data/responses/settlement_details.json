@@ -1,0 +1,50 @@
+{
+  "CommandStatus": "Approved",
+  "Description": "Command Successful. Approved.",
+  "ErrorInformation": null,
+  "ExpressVerify": {
+    "Status": null,
+    "Code": null,
+    "Description": null
+  },
+  "ResponseData": {
+    "SettlementID": "3d5608cd-af70-4009-83d2-7234f1a6d72b",
+    "MerchantID":" 2001",
+    "SettlementType": "Settlement for ACH Debits",
+    "Amount": 52874.72,
+    "PaymentDirection": "Credit",
+    "ItemCount": 21,
+    "BankDescriptorID": null,
+    "PageNumber": 1,
+    "PageSize": 2,
+    "SettlementItems": [
+      {
+        "Transact_ReferenceID": "18127667",
+        "CustomerName": "Alberta Smith",
+        "Company": null,
+        "ProcessDate": "2023-11-20T00:00:00",
+        "SameDayACH": false,
+        "Amount": 623.67,
+        "PaymentDirection": "FromCustomer",
+        "Description": null,
+        "MerchantReferenceID": "8c01e663-0490-408e-9760-0deb081c12ed",
+        "Provider_TransactionID": null
+      },
+      {
+        "Transact_ReferenceID": "18147421",
+        "CustomerName": "John Doe",
+        "Company": null,
+        "ProcessDate": "2023-11-20T00:00:00",
+        "SameDayACH": false,
+        "Amount": 291.67,
+        "PaymentDirection": "FromCustomer",
+        "Description": null,
+        "MerchantReferenceID": "e9f2c35e-1004-409f-8d16-b5891e3b2c62",
+        "Provider_TransactionID": null
+      }
+    ]
+  },
+  "ACHQToken": null,
+  "Provider_TransactionID": null,
+  "TransAct_ReferenceID": "19064342"
+}

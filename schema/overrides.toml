@@ -11,21 +11,8 @@
 # An entry that no longer matches a difference is an error, as is a fragment that
 # is neither registered (in xtask/src/conformance.rs) nor listed in `unregistered`.
 
-# Fragments whose request types arrive in Stage 3; remove each as it is registered.
-unregistered = [
-    "bank-account-status",
-    "bankaccountid",
-    "bankpayment",
-    "banktoken",
-    "cancelpayment",
-    "eventmonitor",
-    "get-settlements",
-    "holdpayment",
-    "refundpayment",
-    "settlement-details",
-    "tokenizedpayment",
-    "updatepayment",
-]
+# Fragments with no request type registered in xtask/src/conformance.rs yet.
+unregistered = []
 
 # Variant names for the industry table, by documented name, where the default
 # (heck's UpperCamelCase) reads badly.
@@ -33,3 +20,41 @@ unregistered = [
 "NFTs / Digital Collectible" = "NftsDigitalCollectible"
 "SaaS and Software Applications" = "SaasAndSoftwareApplications"
 "Heating, Plumbing, A/C" = "HeatingPlumbingAc"
+
+# The fragments are generated from ACHQ's "Try it" forms, and disagree with the
+# guides' field tables in places; the guides are followed. Each entry names the
+# guide that documents the difference.
+
+[gateway.banktoken.required]
+RoutingNumber = "The guide (Tokenize a bank account) marks it required; a token needs an account."
+AccountNumber = "The guide (Tokenize a bank account) marks it required; a token needs an account."
+
+[gateway.bankpayment.required]
+Create_ACHQToken = "The guide (Create a payment) marks it optional, defaulting to No; sent only as Yes."
+Customer_IPAddress = "The guide (Create a payment) requires it only for WEB payments; validation enforces that."
+
+[gateway.bankpayment.extra]
+Billing_Company = "The guide (Create a payment) requires it for business accounts; validation enforces that."
+Billing_CustomerID = "Documented in the guide (Create a payment): the merchant's ID of the customer."
+Run_ExpressVerify = "Documented in the guide (Create a payment) as required; left to the merchant's settings when not set (open item)."
+
+[gateway.tokenizedpayment.required]
+AccountToken = "The guide (Use a token) marks it required; it is the token payment's account."
+TokenSource = "The guide (Use a token) marks it required."
+Customer_IPAddress = "The guide (Use a token) requires it only for WEB payments; validation enforces that."
+
+[gateway.tokenizedpayment.extra]
+Billing_Company = "The guide (Use a token) requires it for business accounts; validation enforces that."
+Billing_CustomerID = "Documented in the guide (Use a token): the merchant's ID of the customer."
+Run_ExpressVerify = "Documented in the guide (Use a token) as required; left to the merchant's settings when not set (open item)."
+
+[gateway.updatepayment.extra]
+Billing_Company = "The guide (Update a payment) accepts any field of Create a payment, which documents it."
+Billing_CustomerID = "The guide (Update a payment) accepts any field of Create a payment, which documents it."
+Create_ACHQToken = "The guide (Update a payment) accepts any field of Create a payment; sent only when a new bank account is tokenized."
+
+[gateway.eventmonitor.required]
+TrackingDate = "The guide (Payment event tracking) marks it required; the query is for one day."
+
+[gateway.eventmonitor.extra]
+MerchantID = "Documented in the guide (Payment event tracking): limits the events to one merchant."

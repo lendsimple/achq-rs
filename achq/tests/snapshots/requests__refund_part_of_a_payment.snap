@@ -1,0 +1,22 @@
+---
+source: achq/tests/requests.rs
+expression: "encode(&payments::RefundPayment::new(\"14452405\", &refund), &merchant())"
+---
+POST https://www.speedchex.com/datalinks/transact.aspx
+accept: application/json
+content-type: application/x-www-form-urlencoded
+user-agent: achq-rs/test
+
+ProviderID=99
+Provider_GateID=provider-gate
+Provider_GateKey=<key>
+MerchantID=2001
+Merchant_GateID=merchant-gate
+Merchant_GateKey=<key>
+Command=ECheck.Refund
+CommandVersion=2.0
+TransAct_ReferenceID=14452405
+Provider_TransactionID=1233
+Merchant_ReferenceID=123456
+Amount=23.00
+Description=Partial refund

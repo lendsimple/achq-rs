@@ -39,6 +39,21 @@ string_id! {
     /// `achq-sandbox-3ff6d-b64fd-5a8a5`. It can move money from or to that
     /// account, so `Debug` hides it; store it as you would the account number.
     AchqToken;
+    /// A token standing in for a bank account in a payment (`AccountToken`): an
+    /// [`AchqToken`], or a Plaid or MX processor token. `Debug` hides it.
+    AccountToken;
+}
+
+impl From<AchqToken> for AccountToken {
+    fn from(token: AchqToken) -> Self {
+        Self::new(token.as_str())
+    }
+}
+
+impl From<&AchqToken> for AccountToken {
+    fn from(token: &AchqToken) -> Self {
+        Self::new(token.as_str())
+    }
 }
 
 #[cfg(test)]

@@ -135,13 +135,26 @@ pub fn field(field: &Field, card: &Cardinality<'_>, attrs: &FieldAttrs) -> Resul
             None => quote!(""),
         };
         let to_form = quote_spanned!(span=> <#ty as #f::ToForm>);
+        // The fields of an optional struct are optional, whatever the struct says.
+        let describe = if optional {
+            quote! {
+                let mut fields = ::std::vec::Vec::new();
+                #to_form::form_fields(&#f::join_prefix(prefix, #prefix), &mut fields);
+                for field in &mut fields {
+                    field.required = false;
+                }
+                out.extend(fields);
+            }
+        } else {
+            quote! {
+                #to_form::form_fields(&#f::join_prefix(prefix, #prefix), out);
+            }
+        };
         (
             quote! {
                 #to_form::write_form(value, form, &#f::join_prefix(prefix, #prefix));
             },
-            quote! {
-                #to_form::form_fields(&#f::join_prefix(prefix, #prefix), out);
-            },
+            describe,
         )
     };
 

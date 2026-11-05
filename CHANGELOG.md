@@ -35,3 +35,24 @@ the crates follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   industry's category, and parsing by name.
 - The ACHQ API reference's OpenAPI fragments and industry table, vendored in
   `schema/` with their sources and checksums.
+- The protocol, without I/O: `protocol::encode` turns a command into an
+  `HttpRequest` (every field, credentials included, in the form body) and
+  `protocol::decode` reads the gateway's answer, so that any HTTP client can
+  drive it. `Context` holds the `ProviderCredentials`, an optional
+  `MerchantCredentials`, the `Endpoints` and test mode.
+- `operations`: a type for each of the gateway's 11 commands, generated from one
+  table: tokens, payments (create, update, cancel, hold, refund), account and
+  owner verification, settlements and settlement details, and event tracking.
+- Requests with builders and validation, including the API's cross-field rules:
+  `payments::PaymentRequest` (from a `bank::BankAccount` or a token),
+  `PaymentUpdate`, `RefundRequest`, `tokens::TokenRequest`,
+  `insights::AccountStatusRequest` and `OwnerAuthRequest`,
+  `settlements::SettlementQuery` and `SettlementDetailsQuery`, and
+  `events::EventQuery`.
+- Results: `PaymentCreated`, `CommandReceipt`, `TokenCreated`,
+  `AccountVerification`, `OwnerVerification`, `Settlement`,
+  `SettlementDetailsPage` (with paging), and `EventBatch`, read from the
+  gateway's CSV event reports.
+- `envelope`: the gateway's response `Envelope`, `CommandStatus`, `ResponseCode`
+  and the bank verification codes; `Error` and `ApiError`, which tells
+  credential, duplicate, validation and retryable failures apart.
