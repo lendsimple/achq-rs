@@ -1,6 +1,6 @@
 /target
 
-# Credentials for the sandbox tests.
+# Credentials for the examples (ACHQ_PROVIDER_ID, ACHQ_PROVIDER_GATE_KEY, ...).
 .env
 .env.*
 
