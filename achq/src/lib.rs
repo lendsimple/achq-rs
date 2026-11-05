@@ -1,17 +1,18 @@
 //! A typed client for the [ACHQ](https://www.achq.com) bank payments API
-//! (formerly SpeedChex).
+//! (formerly SpeedChex), for native targets and WebAssembly.
 //!
-//! **Work in progress.** This release has the protocol, without I/O: build a
-//! command, [`protocol::encode`] it as an HTTP request, send that with any HTTP
-//! client, and [`protocol::decode`] the answer. The clients that send requests
-//! come in a later release.
+//! **Work in progress:** the onboarding API's merchant and fee profile creation,
+//! and the documentation, come in later releases.
 //!
-//! ```
+//! ```no_run
+//! # #[cfg(feature = "reqwest")]
+//! # async fn run() -> Result<(), achq::Error> {
 //! use achq::bank::BankAccount;
-//! use achq::operations::payments::CreatePayment;
 //! use achq::payments::{Customer, PaymentDirection, PaymentRequest, PaymentSource, SecCode};
-//! use achq::protocol::{self, Context};
-//! use achq::{MerchantCredentials, ProviderCredentials, dec};
+//! use achq::{Client, MerchantCredentials, ProviderCredentials, dec};
+//!
+//! let client = Client::new(ProviderCredentials::sandbox());
+//! let merchant = client.merchant(MerchantCredentials::sandbox());
 //!
 //! let payment = PaymentRequest::builder()
 //!     .provider_transaction_id("order-1234")
@@ -31,18 +32,23 @@
 //!     )
 //!     .source(PaymentSource::bank(BankAccount::checking("123123123", "12345678")).tokenize())
 //!     .build();
-//!
-//! let context = Context::new(ProviderCredentials::sandbox()).merchant(MerchantCredentials::sandbox());
-//! let request = protocol::encode(&CreatePayment::new(&payment), &context)?;
-//! // Send `request`, then `protocol::decode::<CreatePayment>(&response)?.payment_id`.
-//! # let _ = request;
-//! # Ok::<(), achq::Error>(())
+//! let created = merchant.payments().create(&payment).await?;
+//! println!("payment {}, token {:?}", created.payment_id, created.token);
+//! # Ok(())
+//! # }
 //! ```
 //!
+//! - [`Client`]: the async client, sending requests with reqwest (feature
+//!   `reqwest`, on by default) or any [`Transport`](transport::Transport). It runs
+//!   the platform's reports; [`Client::merchant`] gives a [`Merchant`] for the
+//!   commands on a merchant's payments.
+//! - [`blocking::Client`]: the blocking client, with ureq (feature `ureq`) or any
+//!   [`blocking::Transport`].
 //! - [`operations`]: a type for every gateway command, by resource.
 //! - [`payments`], [`tokens`], [`insights`], [`settlements`] and [`events`]: the
 //!   commands' requests and results; [`bank`]: bank accounts.
-//! - [`protocol`]: [`encode`](protocol::encode) and [`decode`](protocol::decode);
+//! - [`protocol`]: [`encode`](protocol::encode) a command as an HTTP request,
+//!   send it with any HTTP client, and [`decode`](protocol::decode) the answer;
 //!   [`envelope`]: the gateway's response envelope and codes;
 //!   [`transport`]: the HTTP request and response types.
 //! - [`types`]: exact money [`Amount`](types::Amount)s, the gateway's
@@ -55,6 +61,17 @@
 //! - `onboarding` (feature `onboarding`, on by default): the industry table a
 //!   merchant application classifies the business with.
 //!
+//! # Features
+//!
+//! - `reqwest` (default): `transport::ReqwestTransport`, the async client's
+//!   default transport, on tokio or (in WebAssembly) `fetch`.
+//! - `ureq`: `blocking::UreqTransport`, the blocking client's default transport.
+//! - `rustls` (default) or `native-tls`: the TLS library of those transports.
+//! - `onboarding` (default): the onboarding API.
+//!
+//! Without a transport feature, the clients take any
+//! [`Transport`](transport::Transport) or [`blocking::Transport`].
+//!
 //! The gateway keys grant access to merchants' bank payments: keep them on a
 //! server. The WebAssembly builds are for servers, edge workers and WASI hosts,
 //! not for browsers.
@@ -66,6 +83,9 @@
 extern crate self as achq;
 
 pub mod bank;
+pub mod blocking;
+pub mod client;
+mod config;
 mod credentials;
 pub mod envelope;
 mod error;
@@ -86,6 +106,8 @@ pub mod transport;
 pub mod types;
 pub mod validate;
 
+pub use client::{Client, ClientBuilder, Merchant};
+pub use config::DEFAULT_TIMEOUT;
 pub use credentials::{API_URL, Endpoints, GATEWAY_URL, MerchantCredentials, ProviderCredentials};
 pub use error::{ApiError, Error, TransportError};
 pub use operation::{Operation, Scope};

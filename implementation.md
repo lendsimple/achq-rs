@@ -531,7 +531,36 @@ let token: Option<AchqToken> = created.token;
 - `logging.rs`: no gate key, account number, token or SSN appears at TRACE.
 - `custom_transport.rs`.
 
-**Status**: Not Started
+**Status**: Complete
+
+**Notes (as built)**:
+- **The credentials model, made type-safe:**
+  - **`Client<T = ReqwestTransport>`** is built from `ProviderCredentials` and carries only the platform resources: `settlements()` and `events()`.
+  - **`client.merchant(MerchantCredentials)` returns an owned `Merchant<T>`**, a client clone with the merchant in its context that shares the transport `Arc`. It carries `payments()`, `tokens()` and `insights()`, and can be stored or moved into tasks. This replaces the planned ~~`Merchant<'_, T>`~~.
+  - A merchant command can't be reached through a handle without a merchant. Through `Client::execute` it is the Stage 3 validation error, and nothing is sent (tested).
+  - The blocking module mirrors this: `blocking::{Client, Merchant, ClientBuilder}`.
+- **Table syntax:** each resource now declares its scope (`tokens => Tokens in Merchant { … }`), and a unit test checks that every command's scope matches its resource's. `resource_handles!([Client, Merchant, Transport, async|blocking])` puts each accessor on `Merchant` or `Client` by that scope.
+- **Generated handles:** each is `Copy`, holds `&'a Merchant<T>` or `&'a Client<T>`, and has one method per command. A method takes the ID fields (`impl Into<PaymentId>`) and then `&body`, for example `merchant.payments().cancel("14477175")` and `client.events().query(&EventQuery::on(date))`.
+  - A nested helper macro inside `concat!` names the owner type in the docs. `concat!` expands it eagerly.
+- **Transports:** ported from repay. `Method` has only Get and Post. `UreqTransport` caps responses at 16 MiB.
+- **Logging:**
+  - TRACE request bodies come from `protocol::form(op, ctx).redacted()`, so the per-field sensitivity flags decide what is hidden: gate keys, account numbers, tokens and tax IDs. Routing numbers stay visible.
+  - Response bodies are redacted by key (`ACHQToken`, `AccountToken`, `AccountNumber`, `TaxID`, case-insensitive); a non-JSON body (event CSV) is summarised.
+  - The span is `achq` with `operation` and `command`.
+- **Builder settings:** `endpoints`, `test_mode`, `timeout`, `user_agent`, `validate_requests`. `DEFAULT_TIMEOUT` (60 s) is re-exported.
+- **Features:** `default = ["reqwest", "rustls", "onboarding"]`, plus `ureq` and `native-tls`.
+  - CI clippy covers `""`, `--no-default-features`, `ureq,rustls`, `reqwest,native-tls` and `--all-features`.
+  - CI tests cover all features, no default features, and `ureq,rustls`.
+  - CI wasm clippy covers reqwest (fetch) on wasm32-unknown-unknown.
+- **Tests:**
+  - `tests/common/mod.rs` is a mockito gateway that matches the form content type, `Accept` and the `achq-rs/` user agent and captures the form. `client_cases!` runs 11 cases, one per command, each asserting the command, its version and the credential fields (merchant fields only for merchant commands).
+  - `async_client` has 20 tests: the cases, plus field order, test mode, a declined command, a 503, an HTML page, a timeout, a refused connection, an invalid command not sent, and futures being `Send`.
+  - `blocking_client` has 17.
+  - `custom_transport` has 9 and runs with no features and no tokio: settings reach the request, merchants share the transport, merchant commands need a merchant, validation can be turned off, transport errors pass through, and `Debug` hides the keys.
+  - `logging` has 2: across both clients, the logs carry the operation and command and the redacted fields, and neither gate key, the account number, the tax ID nor the returned token ever appears.
+  - In total, 230 tests pass with all features.
+- **Crate docs:** they now open with a client example and list the features.
+- **Verified:** fmt, clippy ×5, tests ×3 feature sets, MSRV 1.88, minimal versions, wasm (5 combinations), docs and docs.rs, deny, codegen, conformance, drift.
 
 ## Stage 5: Onboarding, ergonomics, sandbox
 **Goal**:

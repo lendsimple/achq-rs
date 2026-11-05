@@ -56,3 +56,17 @@ the crates follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `envelope`: the gateway's response `Envelope`, `CommandStatus`, `ResponseCode`
   and the bank verification codes; `Error` and `ApiError`, which tells
   credential, duplicate, validation and retryable failures apart.
+- `Client`, the async client, with `ReqwestTransport` (feature `reqwest`, on by
+  default; `fetch` on WebAssembly), and `blocking::Client` with `UreqTransport`
+  (feature `ureq`). Both take any `Transport` instead. The client runs the
+  platform's settlement and event reports; `Client::merchant` gives a
+  `Merchant`, which runs the commands on that merchant's payments, tokens and
+  bank account checks, so that a merchant command cannot be sent without a
+  merchant's credentials.
+- Resource handles generated from the command table, such as
+  `merchant.payments().cancel(payment_id)` and `client.events().query(&query)`.
+- Builder settings for the endpoints, test mode, timeout (60 seconds by
+  default), user agent, and request validation.
+- `tracing` logs in an `achq` span naming the operation and command, with request
+  and response bodies at TRACE level; gate keys, account numbers, tokens and tax
+  IDs are never logged.

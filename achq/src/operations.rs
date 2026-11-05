@@ -9,7 +9,9 @@
 /// generates code for each: [`impl_operations!`] the operation types, and the
 /// clients their resource handles.
 ///
-/// Each command names:
+/// Each resource names the scope of its commands: `Merchant` resources are on a
+/// client's [`Merchant`](crate::Merchant), `Platform` ones on the
+/// [`Client`](crate::Client). Each command names:
 /// - `command`: the gateway's `Command` value;
 /// - `scope`: `Merchant` (needs a merchant's credentials) or `Platform`;
 /// - `extra`: fields every request of the command sends;
@@ -20,7 +22,7 @@ macro_rules! operation_table {
     ($callback:ident) => {
         $callback! {
             /// Tokens for bank accounts.
-            tokens => Tokens {
+            tokens => Tokens in Merchant {
                 /// Creates an [`AchqToken`](crate::types::AchqToken) for a bank
                 /// account, to charge or pay it later without its numbers.
                 create => CreateToken {
@@ -35,7 +37,7 @@ macro_rules! operation_table {
 
             /// Payments: creating, changing, cancelling, holding and refunding
             /// them.
-            payments => Payments {
+            payments => Payments in Merchant {
                 /// Creates a payment from or to a bank account, or the account a
                 /// token stands for.
                 create => CreatePayment {
@@ -89,7 +91,7 @@ macro_rules! operation_table {
             }
 
             /// Bank account verification.
-            insights => Insights {
+            insights => Insights in Merchant {
                 /// Checks that a bank account is open and in good standing.
                 account_status => VerifyAccount {
                     command: "ECheck.VerifyPlus",
@@ -112,7 +114,7 @@ macro_rules! operation_table {
             }
 
             /// Settlement reports, across the platform's merchants.
-            settlements => Settlements {
+            settlements => Settlements in Platform {
                 /// Lists the settlements of a date range.
                 list => ListSettlements {
                     command: "ECheckReports.GetSettlements",
@@ -134,7 +136,7 @@ macro_rules! operation_table {
             }
 
             /// Event tracking, across the platform's merchants.
-            events => Events {
+            events => Events in Platform {
                 /// Lists the payment events of a day.
                 query => TrackEvents {
                     command: "ECheckReports.StatusTrackingQuery",
@@ -154,7 +156,7 @@ macro_rules! operation_table {
 macro_rules! impl_operations {
     ($(
         $(#[doc = $rdoc:literal])*
-        $resource:ident => $handle:ident {$(
+        $resource:ident => $handle:ident in $resource_scope:ident {$(
             $(#[doc = $doc:literal])*
             $method:ident => $name:ident {
                 command: $command:literal,
@@ -240,10 +242,147 @@ macro_rules! impl_operations {
     };
 }
 
-pub(crate) use impl_operations;
-// The clients generate their resource handles from the table in Stage 4.
-#[allow(unused_imports)]
-pub(crate) use operation_table;
+/// Generates the clients' resource handles: an accessor per resource on the
+/// client's [`Merchant`](crate::Merchant) or [`Client`](crate::Client), by the
+/// resource's scope, and a handle with a method per command.
+macro_rules! resource_handles {
+    (
+        [$client:ident, $merchant:ident, $transport:path, $mode:ident]
+        $(
+            $(#[doc = $rdoc:literal])*
+            $resource:ident => $handle:ident in $scope:ident {$(
+                $(#[doc = $doc:literal])*
+                $method:ident => $name:ident {
+                    command: $command:literal,
+                    scope: $op_scope:ident,
+                    extra: [$($extra:tt)*],
+                    fields: {$( $field:ident: $fty:ty = $fwire:literal, )*},
+                    body: [$($body:ty)?],
+                    response: $response:ty,
+                }
+            )*}
+        )*
+    ) => {$(
+        $crate::operations::resource_handles!(
+            @accessor $scope [$client, $merchant, $transport] $resource $handle
+        );
+
+        $(#[doc = $rdoc])*
+        #[doc = ""]
+        #[doc = concat!(
+            "From [`", $crate::operations::resource_handles!(@owner_name $scope $client $merchant),
+            "::", stringify!($resource), "`]."
+        )]
+        pub struct $handle<'a, T> {
+            owner: &'a $crate::operations::resource_handles!(@owner $scope $client $merchant T),
+        }
+
+        impl<T> ::core::clone::Clone for $handle<'_, T> {
+            fn clone(&self) -> Self {
+                *self
+            }
+        }
+
+        impl<T> ::core::marker::Copy for $handle<'_, T> {}
+
+        impl<T> ::core::fmt::Debug for $handle<'_, T> {
+            fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                f.debug_struct(stringify!($handle)).finish_non_exhaustive()
+            }
+        }
+
+        impl<T: $transport> $handle<'_, T> {$(
+            $crate::operations::resource_handles!(
+                @method $mode
+                [
+                    $(#[doc = $doc])*
+                    #[doc = ""]
+                    #[doc = concat!(
+                        "Sends [`", stringify!($resource), "::", stringify!($name),
+                        "`](crate::operations::", stringify!($resource), "::",
+                        stringify!($name), ")."
+                    )]
+                ]
+                $resource $name $method [$($field: $fty),*] [$($body)?] $response
+            );
+        )*}
+    )*};
+
+    (@owner Merchant $client:ident $merchant:ident $t:ident) => { $merchant<$t> };
+    (@owner Platform $client:ident $merchant:ident $t:ident) => { $client<$t> };
+    (@owner_name Merchant $client:ident $merchant:ident) => { stringify!($merchant) };
+    (@owner_name Platform $client:ident $merchant:ident) => { stringify!($client) };
+
+    (@accessor Merchant [$client:ident, $merchant:ident, $transport:path] $resource:ident $handle:ident) => {
+        impl<T: $transport> $merchant<T> {
+            #[doc = concat!("The `", stringify!($resource), "` commands: see [`", stringify!($handle), "`].")]
+            pub fn $resource(&self) -> $handle<'_, T> {
+                $handle { owner: self }
+            }
+        }
+    };
+    (@accessor Platform [$client:ident, $merchant:ident, $transport:path] $resource:ident $handle:ident) => {
+        impl<T: $transport> $client<T> {
+            #[doc = concat!("The `", stringify!($resource), "` commands: see [`", stringify!($handle), "`].")]
+            pub fn $resource(&self) -> $handle<'_, T> {
+                $handle { owner: self }
+            }
+        }
+    };
+
+    (@method async [$($doc:tt)*] $resource:ident $name:ident $method:ident
+        [$($field:ident: $fty:ty),*] [$($body:ty)?] $response:ty) => {
+        $($doc)*
+        pub async fn $method(
+            &self,
+            $($field: impl ::core::convert::Into<$fty>,)*
+            $(body: &$body,)?
+        ) -> ::core::result::Result<$response, $crate::Error> {
+            let op = $crate::operations::$resource::$name::new(
+                $($field,)*
+                $($crate::operations::impl_operations!(@id body $body),)?
+            );
+            self.owner.execute(&op).await
+        }
+    };
+    (@method blocking [$($doc:tt)*] $resource:ident $name:ident $method:ident
+        [$($field:ident: $fty:ty),*] [$($body:ty)?] $response:ty) => {
+        $($doc)*
+        pub fn $method(
+            &self,
+            $($field: impl ::core::convert::Into<$fty>,)*
+            $(body: &$body,)?
+        ) -> ::core::result::Result<$response, $crate::Error> {
+            let op = $crate::operations::$resource::$name::new(
+                $($field,)*
+                $($crate::operations::impl_operations!(@id body $body),)?
+            );
+            self.owner.execute(&op)
+        }
+    };
+}
+
+/// The async client's handles.
+macro_rules! async_handles {
+    ($($table:tt)*) => {
+        $crate::operations::resource_handles!(
+            [Client, Merchant, $crate::transport::Transport, async] $($table)*
+        );
+    };
+}
+
+/// The blocking client's handles.
+macro_rules! blocking_handles {
+    ($($table:tt)*) => {
+        $crate::operations::resource_handles!(
+            [Client, Merchant, $crate::blocking::Transport, blocking] $($table)*
+        );
+    };
+}
+
+pub(crate) use {
+    async_handles, blocking_handles, impl_operations, operation_table, resource_handles,
+};
 
 operation_table!(impl_operations);
 
@@ -255,7 +394,7 @@ mod tests {
     macro_rules! names {
         ($(
             $(#[doc = $rdoc:literal])*
-            $resource:ident => $handle:ident {$(
+            $resource:ident => $handle:ident in $resource_scope:ident {$(
                 $(#[doc = $doc:literal])*
                 $method:ident => $name:ident { $($rest:tt)* }
             )*}
@@ -264,6 +403,7 @@ mod tests {
                 <crate::operations::$resource::$name<'static> as Operation>::NAME,
                 <crate::operations::$resource::$name<'static> as Operation>::COMMAND,
                 <crate::operations::$resource::$name<'static> as Operation>::SCOPE,
+                Scope::$resource_scope,
             ),)*)*]
         };
     }
@@ -272,18 +412,27 @@ mod tests {
     fn the_table_lists_every_command_once() {
         let commands = operation_table!(names);
         assert_eq!(commands.len(), 11);
-        let mut names: Vec<&str> = commands.iter().map(|(name, _, _)| *name).collect();
+        let mut names: Vec<&str> = commands.iter().map(|(name, ..)| *name).collect();
         names.sort_unstable();
         names.dedup();
         assert_eq!(names.len(), 11);
         let platform: Vec<&str> = commands
             .iter()
-            .filter(|(_, _, scope)| *scope == Scope::Platform)
-            .map(|(name, _, _)| *name)
+            .filter(|(_, _, scope, _)| *scope == Scope::Platform)
+            .map(|(name, ..)| *name)
             .collect();
         assert_eq!(
             platform,
             ["settlements.list", "settlements.details", "events.query"]
         );
+    }
+
+    #[test]
+    fn every_command_has_its_resource_scope() {
+        // The clients put a resource on the `Merchant` or the `Client` by its
+        // scope, so every command in it must need the same credentials.
+        for (name, _, scope, resource_scope) in operation_table!(names) {
+            assert_eq!(scope, resource_scope, "{name}");
+        }
     }
 }
