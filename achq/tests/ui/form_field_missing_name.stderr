@@ -1,0 +1,5 @@
+error: a field of a `#[achq(form)]` struct needs one of `form = "..."`, `flatten` or `skip_form`
+ --> tests/ui/form_field_missing_name.rs:6:5
+  |
+6 |     description: Option<String>,
+  |     ^^^^^^^^^^^

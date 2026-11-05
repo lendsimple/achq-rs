@@ -1,0 +1,5 @@
+error[E0425]: cannot find function `true_false` in module `::achq::form::with`
+ --> tests/ui/unknown_with.rs:4:49
+  |
+4 |     #[achq(form = "SendEmailToCustomer", with = "true_false")]
+  |                                                 ^^^^^^^^^^^^ not found in `::achq::form::with`

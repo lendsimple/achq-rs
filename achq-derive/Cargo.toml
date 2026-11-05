@@ -1,0 +1,21 @@
+[package]
+name = "achq-derive"
+description = "Derive macros for the achq crate (validation, redacted Debug and form encoding)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+documentation = "https://docs.rs/achq-derive"
+keywords = ["achq", "payments", "derive"]
+categories = ["development-tools::procedural-macro-helpers"]
+
+[dependencies]
+proc-macro2 = "1.0.107"
+quote = "1.0.47"
+syn = { version = "3.0.6", features = ["full", "extra-traits"] }
+
+[lib]
+proc-macro = true

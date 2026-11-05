@@ -1,0 +1,5 @@
+error: use only one of `form`, `flatten` and `skip_form`
+  --> tests/ui/form_and_flatten_together.rs:11:30
+   |
+11 |     #[achq(form = "Billing", flatten)]
+   |                              ^^^^^^^

@@ -1,0 +1,5 @@
+error[E0425]: cannot find value `no_emoji` in module `::achq::validate::rules`
+ --> tests/ui/unknown_rule.rs:3:19
+  |
+3 |     #[achq(rule = "no_emoji")]
+  |                   ^^^^^^^^^^ not found in `::achq::validate::rules`

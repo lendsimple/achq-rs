@@ -1,0 +1,5 @@
+error: form bodies have no lists; a form field cannot be a `Vec`
+ --> tests/ui/form_vec_field.rs:5:11
+  |
+5 |     tags: Vec<String>,
+  |           ^^^^^^^^^^^

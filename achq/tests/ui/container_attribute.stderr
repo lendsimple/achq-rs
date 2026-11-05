@@ -1,0 +1,5 @@
+error: `sensitive` goes on fields; on the struct, only `form`, `one_of` and `check` are supported
+ --> tests/ui/container_attribute.rs:2:8
+  |
+2 | #[achq(sensitive)]
+  |        ^^^^^^^^^

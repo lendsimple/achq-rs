@@ -1,0 +1,5 @@
+error: `form` needs `#[achq(form)]` on the struct
+ --> tests/ui/form_attribute_without_form.rs:3:19
+  |
+3 |     #[achq(form = "Amount")]
+  |                   ^^^^^^^^

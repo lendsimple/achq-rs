@@ -1,0 +1,5 @@
+error: `one_of` field `account_number` must be an `Option<T>`
+ --> tests/ui/one_of_required_field.rs:2:17
+  |
+2 | #[achq(one_of = "account_number | account_token")]
+  |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

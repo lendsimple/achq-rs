@@ -1,0 +1,11 @@
+/target
+
+# Credentials for the sandbox tests.
+.env
+.env.*
+
+# Snapshots insta writes when a snapshot test fails, pending review.
+*.snap.new
+*.pending-snap
+
+.DS_Store

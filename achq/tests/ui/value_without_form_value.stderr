@@ -1,0 +1,21 @@
+error[E0277]: `bool` has no single form encoding
+ --> tests/ui/value_without_form_value.rs:5:17
+  |
+1 | #[derive(achq::Model)]
+  |          ----------- required by a bound introduced by this call
+...
+5 |     send_email: bool,
+  |                 ^^^^ no `FormValue` for `bool`
+  |
+  = help: the trait `FormValue` is not implemented for `bool`
+  = note: choose a format with `with = "..."`: `yes_no` or `on_off` for a `bool`, `mdy_slash`, `mdy` or `iso_date` for a `Date`
+  = help: the following other types implement trait `FormValue`:
+            AchqToken
+            Amount
+            CommandId
+            FeeProfileId
+            IpAddr
+            Ipv4Addr
+            MerchantId
+            MerchantReferenceId
+          and $N others

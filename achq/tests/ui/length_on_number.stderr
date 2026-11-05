@@ -1,0 +1,5 @@
+error[E0277]: the trait bound `u16: AsRef<str>` is not satisfied
+ --> tests/ui/length_on_number.rs:4:16
+  |
+4 |     page_size: u16,
+  |                ^^^ the trait `AsRef<str>` is not implemented for `u16`

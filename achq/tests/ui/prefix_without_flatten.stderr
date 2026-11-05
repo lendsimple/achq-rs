@@ -1,0 +1,5 @@
+error: `prefix` is only valid with `flatten`
+ --> tests/ui/prefix_without_flatten.rs:4:36
+  |
+4 |     #[achq(form = "City", prefix = "Billing_")]
+  |                                    ^^^^^^^^^^

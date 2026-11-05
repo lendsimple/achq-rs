@@ -1,0 +1,5 @@
+error: `one_of` names unknown field `account_tokn`
+ --> tests/ui/one_of_unknown_field.rs:2:17
+  |
+2 | #[achq(one_of = "account_number | account_tokn")]
+  |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
