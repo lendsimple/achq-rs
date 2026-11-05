@@ -1,6 +1,8 @@
 //! Golden requests: the exact method, URL, headers and form fields each command
 //! encodes to. Review changes with `cargo insta review`.
 
+mod common;
+
 use std::net::Ipv4Addr;
 
 use achq::bank::BankAccount;
@@ -37,15 +39,28 @@ fn merchant() -> Context {
 }
 
 /// The request as text: the request line, sorted headers, and each form field on
-/// a line of its own (decoded), with the gate keys replaced.
+/// a line of its own (decoded), with the gate keys replaced; or a JSON body,
+/// pretty-printed.
 fn render(request: &HttpRequest) -> String {
     let mut out = format!("{} {}\n", request.method, request.url);
     let mut headers = request.headers.clone();
     headers.sort();
     for (name, value) in headers {
+        let value = if name == "provider_gatekey" {
+            assert_eq!(value, "provider-s3cret");
+            "<key>".to_owned()
+        } else {
+            value
+        };
         out.push_str(&format!("{name}: {value}\n"));
     }
     out.push('\n');
+    if request.header("content-type") == Some("application/json") {
+        let json: serde_json::Value = serde_json::from_slice(&request.body).unwrap();
+        out.push_str(&serde_json::to_string_pretty(&json).unwrap());
+        out.push('\n');
+        return out;
+    }
     let body = String::from_utf8(request.body.clone()).unwrap();
     for pair in body.split('&') {
         let (name, value) = pair.split_once('=').unwrap();
@@ -289,7 +304,8 @@ fn invalid_commands_are_not_encoded() {
         "invalid request: payment_id: must not be empty"
     );
     // Without validation, the gateway decides.
-    let request = protocol::encode_unvalidated(&payments::HoldPayment::new(" "), &platform());
+    let request =
+        protocol::encode_unvalidated(&payments::HoldPayment::new(" "), &platform()).unwrap();
     assert!(!request.body.is_empty());
 }
 
@@ -306,4 +322,38 @@ fn the_form_redacts_the_keys_and_account_numbers() {
     );
     assert!(redacted.contains("AccountNumber=[REDACTED]"), "{redacted}");
     assert!(redacted.contains("RoutingNumber=123123123"), "{redacted}");
+}
+
+#[cfg(feature = "onboarding")]
+#[test]
+fn create_merchant() {
+    let application = common::application();
+    insta::assert_snapshot!(encode(
+        &achq::operations::onboarding::CreateMerchant::new(&application),
+        &platform()
+    ));
+}
+
+#[cfg(feature = "onboarding")]
+#[test]
+fn create_fee_profile() {
+    let fees = common::fees();
+    insta::assert_snapshot!(encode(
+        &achq::operations::onboarding::CreateFeeProfile::new(&fees),
+        &platform()
+    ));
+}
+
+#[cfg(feature = "onboarding")]
+#[test]
+fn onboarding_ignores_the_merchant_and_test_mode() {
+    let fees = common::fees();
+    let op = achq::operations::onboarding::CreateFeeProfile::new(&fees);
+    let request = protocol::encode(&op, &merchant().test_mode(true)).unwrap();
+    assert_eq!(request.header("providerid"), Some("99"));
+    let body = String::from_utf8(request.body).unwrap();
+    assert!(
+        !body.contains("TestMode") && !body.contains("2001"),
+        "{body}"
+    );
 }

@@ -12,7 +12,8 @@ rust-version.workspace = true
 # Without default features, so that the generated `onboarding` module is not part
 # of the tool that generates it: a broken generated file must not stop
 # `cargo xtask codegen` from replacing it.
-achq = { path = "../achq", default-features = false }
+achq = { path = "../achq", default-features = false, features = ["ureq", "rustls"] }
+time = "0.3.55"
 heck = "0.5.0"
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"

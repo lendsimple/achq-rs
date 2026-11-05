@@ -1,7 +1,7 @@
 //! Decoding the gateway's responses, from the samples in ACHQ's guides and the
 //! orkestra client's fixtures (see `tests/data/README.md`).
 
-use achq::envelope::{CommandStatus, ResponseCode, VerificationCode, VerificationStatus};
+use achq::envelope::{CommandStatus, ResponseCode, VerificationCode};
 use achq::operations::{insights, payments, settlements, tokens};
 use achq::payments::PaymentDirection;
 use achq::protocol;
@@ -161,14 +161,6 @@ fn an_internal_error_may_be_retried() {
 }
 
 #[test]
-fn a_rejected_account_carries_its_verification() {
-    let err = decode::<payments::CreatePayment>("express_verify_rejected.json").unwrap_err();
-    let verify = err.as_api().unwrap().express_verify().unwrap();
-    assert_eq!(verify.status, Some(VerificationStatus::Negative));
-    assert_eq!(verify.code, Some(VerificationCode::InvalidAccountNumber));
-}
-
-#[test]
 fn legacy_keys_are_ignored() {
     let receipt = decode::<payments::HoldPayment>("legacy_keys.json").unwrap();
     assert_eq!(receipt.command_id.as_str(), "56789");
@@ -247,5 +239,40 @@ fn error_statuses_keep_the_body() {
             assert_eq!((status, body.as_str()), (503, "Service Unavailable"));
         }
         other => panic!("unexpected {other:?}"),
+    }
+}
+
+#[cfg(feature = "onboarding")]
+mod onboarding {
+    use achq::operations::onboarding::{CreateFeeProfile, CreateMerchant};
+
+    use super::*;
+
+    #[test]
+    fn a_merchant_application() {
+        let created = decode::<CreateMerchant>("onboarding_created.json").unwrap();
+        assert_eq!(created.id.as_str(), "5c1d1e2a-8f4b-4b7e-9a51-2f0d6c3b9e10");
+        assert_eq!(created.status.as_deref(), Some("Pending"));
+        assert_eq!(
+            created.api_request_id.as_deref(),
+            Some("0HN7S9A3KQ2M1:00000001")
+        );
+    }
+
+    #[test]
+    fn other_failures_are_statuses() {
+        let response = HttpResponse::new(500, vec![], "Internal Server Error");
+        let err = protocol::decode::<CreateFeeProfile>(&response).unwrap_err();
+        assert!(matches!(err, Error::Status { status: 500, .. }), "{err:?}");
+        let empty = HttpResponse::new(400, vec![], "{}");
+        let err = protocol::decode::<CreateFeeProfile>(&empty).unwrap_err();
+        assert!(matches!(err, Error::Status { status: 400, .. }), "{err:?}");
+    }
+
+    #[test]
+    fn an_answer_without_an_id_cannot_be_read() {
+        let response = HttpResponse::new(200, vec![], r#"{"status": "Pending"}"#);
+        let err = protocol::decode::<CreateMerchant>(&response).unwrap_err();
+        assert!(err.to_string().contains("no id"), "{err}");
     }
 }

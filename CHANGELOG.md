@@ -70,3 +70,13 @@ the crates follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `tracing` logs in an `achq` span naming the operation and command, with request
   and response bodies at TRACE level; gate keys, account numbers, tokens and tax
   IDs are never logged.
+- The onboarding API (feature `onboarding`): `client.onboarding().create_merchant`
+  with an `onboarding::MerchantApplication`, and `create_fee_profile` with a
+  `FeeSchedule`, sent as JSON with the platform's credentials in headers. Its
+  errors are `Error::Onboarding`.
+- `ApiError::is_account_rejected` (a payment refused for its bank account,
+  including the undocumented code 202) and `ApiError::is_queued` (a new payment
+  that cannot be changed yet).
+- Responses recorded from ACHQ's public sandbox, as test fixtures, with
+  `cargo xtask record`; and an opt-in suite against the sandbox
+  (`ACHQ_SANDBOX=1`).

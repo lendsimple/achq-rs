@@ -1,8 +1,8 @@
 //! A typed client for the [ACHQ](https://www.achq.com) bank payments API
 //! (formerly SpeedChex), for native targets and WebAssembly.
 //!
-//! **Work in progress:** the onboarding API's merchant and fee profile creation,
-//! and the documentation, come in later releases.
+//! **Work in progress:** the README, examples and release come in a later
+//! release; the API itself is complete.
 //!
 //! ```no_run
 //! # #[cfg(feature = "reqwest")]
@@ -58,8 +58,8 @@
 //!   hidden from logs.
 //! - [`validate`]: checks of the API's constraints, collecting every violation
 //!   with the path of the field.
-//! - `onboarding` (feature `onboarding`, on by default): the industry table a
-//!   merchant application classifies the business with.
+//! - `onboarding` (feature `onboarding`, on by default): merchant applications
+//!   and fee profiles for the onboarding API, and its industry table.
 //!
 //! # Features
 //!
@@ -109,7 +109,7 @@ pub mod validate;
 pub use client::{Client, ClientBuilder, Merchant};
 pub use config::DEFAULT_TIMEOUT;
 pub use credentials::{API_URL, Endpoints, GATEWAY_URL, MerchantCredentials, ProviderCredentials};
-pub use error::{ApiError, Error, TransportError};
+pub use error::{ApiError, Error, OnboardingError, TransportError};
 pub use operation::{Operation, Scope};
 pub use rust_decimal::{Decimal, dec};
 pub use secrecy::SecretString;

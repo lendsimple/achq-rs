@@ -18,9 +18,17 @@ pub enum Error {
     #[error(transparent)]
     Api(Box<ApiError>),
 
+    /// The onboarding API refused the request, with an `ErrorResponse`.
+    #[error(transparent)]
+    Onboarding(Box<OnboardingError>),
+
     /// The request breaks the API's constraints, so it was not sent.
     #[error("invalid request: {0}")]
     Validation(#[from] ValidationError),
+
+    /// An onboarding API body could not be written as JSON.
+    #[error("could not write the request body: {0}")]
+    Encode(#[source] serde_json::Error),
 
     /// A successful response could not be read as the expected type.
     #[error("could not read the response (HTTP {status}): {source}")]
@@ -71,10 +79,11 @@ impl Error {
     pub fn status(&self) -> Option<u16> {
         match self {
             Error::Api(err) => Some(err.status),
+            Error::Onboarding(err) => Some(err.status),
             Error::Decode { status, .. }
             | Error::UnexpectedContentType { status, .. }
             | Error::Status { status, .. } => Some(*status),
-            Error::Validation(_) | Error::Transport(_) => None,
+            Error::Validation(_) | Error::Encode(_) | Error::Transport(_) => None,
         }
     }
 
@@ -90,6 +99,92 @@ impl Error {
         }
     }
 }
+
+/// An error the onboarding API reported: an error status with an
+/// `ErrorResponse` body.
+///
+/// Displays as `HTTP 400 [code] message: additional information`.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[non_exhaustive]
+pub struct OnboardingError {
+    #[serde(skip)]
+    status: u16,
+    #[serde(default)]
+    error_code: Option<String>,
+    #[serde(default)]
+    message: Option<String>,
+    #[serde(default)]
+    additional_information: Option<String>,
+    #[serde(default)]
+    api_request_id: Option<String>,
+    #[serde(default)]
+    api_request_time_stamp: Option<String>,
+}
+
+impl OnboardingError {
+    pub(crate) fn with_status(mut self, status: u16) -> Self {
+        self.status = status;
+        self
+    }
+
+    /// Whether the body said anything, as opposed to being some other JSON.
+    pub(crate) fn has_content(&self) -> bool {
+        self.error_code.is_some() || self.message.is_some()
+    }
+
+    /// The HTTP status, usually 400.
+    pub fn status(&self) -> u16 {
+        self.status
+    }
+
+    /// The API's error code.
+    pub fn error_code(&self) -> Option<&str> {
+        self.error_code.as_deref()
+    }
+
+    /// The API's message; empty if there is none.
+    pub fn message(&self) -> &str {
+        self.message.as_deref().unwrap_or("")
+    }
+
+    /// More detail, such as the fields at fault.
+    pub fn additional_information(&self) -> Option<&str> {
+        self.additional_information.as_deref()
+    }
+
+    /// The API's ID of the request, to quote to ACHQ support.
+    pub fn api_request_id(&self) -> Option<&str> {
+        self.api_request_id.as_deref()
+    }
+
+    /// When the API handled the request, as it wrote it.
+    pub fn api_request_timestamp(&self) -> Option<&str> {
+        self.api_request_time_stamp.as_deref()
+    }
+}
+
+impl fmt::Display for OnboardingError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "HTTP {}", self.status)?;
+        if let Some(code) = &self.error_code {
+            write!(f, " [{code}]")?;
+        }
+        if !self.message().is_empty() {
+            write!(f, " {}", self.message())?;
+        }
+        if let Some(info) = self
+            .additional_information
+            .as_deref()
+            .filter(|i| !i.is_empty())
+        {
+            write!(f, ": {info}")?;
+        }
+        Ok(())
+    }
+}
+
+impl std::error::Error for OnboardingError {}
 
 impl From<ApiError> for Error {
     fn from(err: ApiError) -> Self {
@@ -232,6 +327,31 @@ impl ApiError {
         self.code_in(&[ResponseCode::DUPLICATE_COMMAND, ResponseCode::NON_UNIQUE_ID])
     }
 
+    /// The payment's bank account failed verification (*Express Verify*): see
+    /// [`express_verify`](Self::express_verify) for why.
+    pub fn is_account_rejected(&self) -> bool {
+        self.code_in(&[
+            ResponseCode::FAILED_EXPRESS_VERIFY,
+            ResponseCode::REJECTED_BY_GATEWAY,
+        ])
+    }
+
+    /// The payment was just created and is still queued, so it cannot be changed
+    /// yet (103, "Payment still in a queued state. Please try again later."). Any
+    /// other 103 means the payment can no longer change; see
+    /// [`field`](Self::field) for its status.
+    ///
+    /// In the sandbox, a payment sent without
+    /// [`run_express_verify`](crate::payments::PaymentRequest::run_express_verify)
+    /// stayed queued for more than 30 seconds, while one sent with it could be
+    /// changed at once.
+    pub fn is_queued(&self) -> bool {
+        self.code() == Some(ResponseCode::TRANSACTION_NOT_MODIFIABLE)
+            && self
+                .field()
+                .is_some_and(|info| info.to_ascii_lowercase().contains("queued"))
+    }
+
     /// The command or one of its fields is invalid: fix the request rather than
     /// retrying it.
     pub fn is_validation(&self) -> bool {
@@ -336,11 +456,40 @@ mod tests {
     }
 
     #[test]
+    fn tells_a_queued_payment_from_one_that_cannot_change() {
+        let queued = api_error(json!({"CommandStatus": "Error", "ResponseCode": "103",
+            "ErrorInformation": "Payment still in a queued state. Please try again later."}));
+        assert!(queued.is_queued());
+        let settled = api_error(json!({"CommandStatus": "Error", "ResponseCode": "103",
+            "ErrorInformation": "Scheduled"}));
+        assert!(!settled.is_queued());
+    }
+
+    #[test]
     fn express_verify_is_none_when_empty() {
         let empty = api_error(json!({"ExpressVerify": {"Status": null, "Code": null}}));
         assert_eq!(empty.express_verify(), None);
         let rejected = api_error(json!({"ExpressVerify": {"Status": "NEG", "Code": "GS02"}}));
         assert!(rejected.express_verify().is_some());
+    }
+
+    #[test]
+    fn displays_onboarding_errors() {
+        let err: OnboardingError = serde_json::from_value(json!({
+            "errorCode": "ValidationError", "message": "Invalid request",
+            "additionalInformation": "businessEntity.taxId is required",
+            "apiRequestId": "abc", "apiRequestTimeStamp": "2026-11-05T12:00:00Z"
+        }))
+        .unwrap();
+        let err = err.with_status(400);
+        assert_eq!(
+            err.to_string(),
+            "HTTP 400 [ValidationError] Invalid request: businessEntity.taxId is required"
+        );
+        assert_eq!(err.api_request_id(), Some("abc"));
+        assert_eq!(Error::Onboarding(Box::new(err)).status(), Some(400));
+        let empty: OnboardingError = serde_json::from_value(json!({"title": "x"})).unwrap();
+        assert!(!empty.has_content());
     }
 
     #[test]

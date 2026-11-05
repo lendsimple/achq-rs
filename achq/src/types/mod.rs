@@ -2,8 +2,8 @@
 //! and typed IDs.
 
 mod amount;
-mod date;
-mod ids;
+pub(crate) mod date;
+pub(crate) mod ids;
 
 pub use amount::{Amount, AmountError};
 pub use date::{DateTimeError, LocalDateTime};

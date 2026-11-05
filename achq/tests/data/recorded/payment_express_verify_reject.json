@@ -1,0 +1,1 @@
+{"CommandStatus":"Declined","Description":"Failed Express Verify","ErrorInformation":null,"ExpressVerify":{"Status":"NEG","Code":"P41","Description":"NEGATIVE INFO"},"ResponseData":null,"ACHQToken":null,"Provider_TransactionID":"achq-rs-18e544ed04e90668-5","TransAct_ReferenceID":"36438693","ResponseCode":"202"}

@@ -7,7 +7,7 @@ use serde_json::Value;
 
 use crate::credentials::ProviderCredentials;
 use crate::error::Error;
-use crate::operation::Operation;
+use crate::operation::{Endpoint, Operation};
 use crate::protocol::{self, Context};
 use crate::transport::{HttpRequest, HttpResponse};
 
@@ -17,8 +17,18 @@ pub const DEFAULT_TIMEOUT: Duration = Duration::from_secs(60);
 
 const REDACTED: &str = "[REDACTED]";
 
-/// Response fields whose values are never logged.
-const SENSITIVE_RESPONSE_FIELDS: &[&str] = &["ACHQToken", "AccountToken", "AccountNumber", "TaxID"];
+/// JSON fields whose values are never logged, ignoring case: in gateway responses,
+/// and in onboarding API requests and responses.
+const SENSITIVE_FIELDS: &[&str] = &[
+    "ACHQToken",
+    "AccountToken",
+    "AccountNumber",
+    "TaxID",
+    "ssn",
+    "dob",
+    "transferProcessorToken",
+    "billingProcessorToken",
+];
 
 /// A client's settings.
 #[derive(Debug, Clone)]
@@ -41,16 +51,20 @@ impl Config {
     pub fn encode<O: Operation>(&self, op: &O) -> Result<HttpRequest, Error> {
         let mut request = if self.validate_requests {
             protocol::encode(op, &self.context)
-                .inspect_err(|err| tracing::debug!(error = %err, "request not sent"))?
         } else {
             protocol::encode_unvalidated(op, &self.context)
-        };
+        }
+        .inspect_err(|err| tracing::debug!(error = %err, "request not sent"))?;
         request.timeout = Some(self.timeout);
         tracing::debug!(method = %request.method, url = %request.url, "sending request");
         if tracing::enabled!(tracing::Level::TRACE) {
-            // The gate keys and account details are in the body: log it from the
-            // form, which knows which fields are sensitive.
-            let body = protocol::form(op, &self.context).redacted();
+            let body = match O::ENDPOINT {
+                // The gate keys and account details are in the form: log it from
+                // the form, which knows which fields are sensitive.
+                Endpoint::Gateway => protocol::form(op, &self.context).redacted(),
+                // The gate key is a header, never logged.
+                Endpoint::Api(_) => redact_body(Some("application/json"), &request.body),
+            };
             tracing::trace!(%body, "request body");
         }
         Ok(request)
@@ -59,7 +73,7 @@ impl Config {
     pub fn decode<O: Operation>(&self, response: &HttpResponse) -> Result<O::Response, Error> {
         tracing::debug!(status = response.status, "received response");
         if tracing::enabled!(tracing::Level::TRACE) {
-            let body = redact_response(response.content_type().as_deref(), &response.body);
+            let body = redact_body(response.content_type().as_deref(), &response.body);
             tracing::trace!(%body, "response body");
         }
         let result = protocol::decode::<O>(response);
@@ -75,9 +89,9 @@ pub(crate) fn request_span<O: Operation>() -> tracing::Span {
     tracing::debug_span!("achq", operation = O::NAME, command = O::COMMAND)
 }
 
-/// A response body for logging: JSON with the values of sensitive fields replaced
-/// by `[REDACTED]`, or a summary of anything else (such as an event report).
-pub(crate) fn redact_response(content_type: Option<&str>, body: &[u8]) -> String {
+/// A body for logging: JSON with the values of sensitive fields replaced by
+/// `[REDACTED]`, or a summary of anything else (such as an event report).
+pub(crate) fn redact_body(content_type: Option<&str>, body: &[u8]) -> String {
     if body.is_empty() {
         return String::new();
     }
@@ -98,7 +112,7 @@ fn redact_json(value: &mut Value) {
     match value {
         Value::Object(map) => {
             for (key, value) in map.iter_mut() {
-                let sensitive = SENSITIVE_RESPONSE_FIELDS
+                let sensitive = SENSITIVE_FIELDS
                     .iter()
                     .any(|field| field.eq_ignore_ascii_case(key));
                 if sensitive && !value.is_null() {
@@ -165,21 +179,31 @@ mod tests {
                         "ResponseData": [{"accountnumber": "123", "Name": "x"}],
                         "Other": {"TaxID": "1234", "AccountToken": null}}"#;
         assert_eq!(
-            redact_response(Some("application/json"), body),
+            redact_body(Some("application/json"), body),
             r#"{"ACHQToken":"[REDACTED]","CommandStatus":"Approved","Other":{"AccountToken":null,"TaxID":"[REDACTED]"},"ResponseData":[{"Name":"x","accountnumber":"[REDACTED]"}]}"#
         );
     }
 
     #[test]
+    fn redacts_onboarding_fields() {
+        let body =
+            br#"{"principalOwner": {"ssn": "123456789", "dob": "01/02/1980", "firstName": "Ann"},
+                        "businessEntity": {"taxId": "987654321"},
+                        "bankAccounts": {"transfers": {"transferProcessorToken": "tok"}}}"#;
+        let redacted = redact_body(Some("application/json"), body);
+        for secret in ["123456789", "01/02/1980", "987654321", "tok"] {
+            assert!(!redacted.contains(secret), "{redacted}");
+        }
+        assert!(redacted.contains("Ann"), "{redacted}");
+    }
+
+    #[test]
     fn summarizes_other_bodies() {
         assert_eq!(
-            redact_response(Some("text/plain"), b"14447204,,2001,Created\n"),
+            redact_body(Some("text/plain"), b"14447204,,2001,Created\n"),
             "<23 bytes of text/plain>"
         );
-        assert_eq!(
-            redact_response(None, b"<html>"),
-            "<6 bytes of unknown type>"
-        );
-        assert_eq!(redact_response(None, b""), "");
+        assert_eq!(redact_body(None, b"<html>"), "<6 bytes of unknown type>");
+        assert_eq!(redact_body(None, b""), "");
     }
 }

@@ -1,0 +1,88 @@
+---
+source: achq/tests/requests.rs
+expression: "encode(&achq::operations::onboarding::CreateMerchant::new(&application),\n&platform())"
+---
+POST https://www.speedchex.com/api/onboarding
+accept: application/json
+content-type: application/json
+provider_gateid: provider-gate
+provider_gatekey: <key>
+providerid: 99
+user-agent: achq-rs/test
+
+{
+  "bankAccounts": {
+    "transfers": {
+      "accountNumber": "987650123",
+      "bankName": "First Bank",
+      "routingNumber": "123123123"
+    }
+  },
+  "businessEntity": {
+    "address1": "1 Pier Way",
+    "businessDescription": "Frozen bananas",
+    "city": "Newport Beach",
+    "companyDBA": "Bluth Bananas",
+    "country": "US",
+    "industryCategory": "Digital Goods and Software",
+    "legalBusinessName": "Bluth Company LLC",
+    "phone": "5558675309",
+    "specificIndustry": "SaaS and Software Applications",
+    "state": "CA",
+    "taxId": "123456789",
+    "type": "LLC",
+    "website": "https://example.com",
+    "zip": "92660"
+  },
+  "feeProfile": {
+    "bankIdFee": 0.0,
+    "bankStatusFee": 0.0,
+    "disputeFee": 0.0,
+    "feeName": "achq-rs test",
+    "monthlyFee": 0.0,
+    "percentCap": 10.0,
+    "percentFee": 0.5,
+    "returnFee": 5.0,
+    "setupFee": 0.0,
+    "transactionFee": 0.25
+  },
+  "onboardFunctions": {
+    "requireKYC": true,
+    "requirePlaidConnect": true
+  },
+  "paymentProfile": {
+    "chargeDollarsMonth": "100000",
+    "chargesMaxAmount": "5000",
+    "chargesPerMonth": "500",
+    "customerServiceEmail": "help@example.com",
+    "customerServicePhone": "5558675309",
+    "customerTypeBusiness": false,
+    "customerTypeConsumer": true,
+    "enableCCD": false,
+    "enableCharges": true,
+    "enablePPD": false,
+    "enablePayouts": true,
+    "enableTEL": false,
+    "enableWEB": true,
+    "payoutsDollarsMonth": "50000",
+    "payoutsMaxAmount": "5000",
+    "payoutsPerMonth": "200",
+    "serviceUseCase": "Sale of goods",
+    "statementDescriptor": "BANANAS"
+  },
+  "principalOwner": {
+    "address1": "1 Pier Way",
+    "city": "Newport Beach",
+    "dob": "01/02/1950",
+    "email": "george@example.com",
+    "firstName": "George",
+    "ipAddress": "203.0.113.9",
+    "jobTitle": "CEO",
+    "lastName": "Bluth",
+    "mobilePhone": "5558675309",
+    "ownershipPercent": "60",
+    "ssn": "987654321",
+    "state": "CA",
+    "zip": "92660"
+  }
+}

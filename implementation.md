@@ -586,7 +586,40 @@ let token: Option<AchqToken> = created.token;
 - The conditional-rule violations.
 - Sandbox suite (manual).
 
-**Status**: Not Started
+**Status**: Complete
+
+**Notes (as built)**:
+- **Second endpoint:** `Operation` gained the hidden `ENDPOINT` (`Gateway` or `Api(path)`) and `json_body`.
+  - The table syntax is now `endpoint: gateway | api "/path"` and `body: [form T] | [json T]`.
+  - A resource can carry a `#[cfg(...)]` after its docs; it gates the module, the handle and the accessor, with a docs.rs label.
+  - The `onboarding` resource (`create_merchant`, `create_fee_profile`) is `in Platform` under `#[cfg(feature = "onboarding")]`, making 13 commands.
+- **Onboarding requests:** `protocol::encode` sends JSON to `{api}{path}` with the `ProviderID`/`Provider_GateID`/`Provider_GateKey` headers.
+  - `encode_unvalidated` now returns a `Result`, and the new `Error::Encode` covers a body that can't be serialized.
+- **Onboarding errors:** `decode` turns an API error status with an `ErrorResponse` body into the new `Error::Onboarding(OnboardingError)`.
+- **Logging:** onboarding request bodies are redacted by key. The single case-insensitive list adds `ssn`, `dob`, `taxId` and the processor tokens.
+- **Onboarding types** (`onboarding/{merchant,fees}.rs`) are serde + `Model` + bon, with conditionals made structural:
+  - `Limits` enable charges or payouts;
+  - `sec_codes: Vec<SecCode>` becomes the four flags;
+  - `FundingAccount` is `Bank` or `Plaid`, written with the transfer or billing key names;
+  - `FeeChoice` is a `Profile` ID or a `Schedule`;
+  - `IndustryChoice` is `Listed(Industry)` or `Custom`.
+- **Schema limits:** the schema's lengths are enforced, because Swashbuckle generates them from the server's models; this includes `address2 ≤ 9`. The exception is `transferProcessorToken ≤ 10` (open item).
+- **`FeeSchedule`:** sends every fee, defaulting to 0, because the API requires them.
+- **Where the onboarding schema check lives:** in `achq/tests/onboarding_schema.rs`, not xtask, because xtask builds `achq` without `onboarding` to keep codegen safe.
+  - It compares the keys of a minimal application and of maximal ones with each schema's properties and `required` list, keeping its 9 accepted differences, each with a reason. Every key matched a schema property, confirming `companyDBA`, `ownerShipPercent` and `requireKYC`.
+  - It skips outside the repository.
+- **`cargo xtask record`** (`xtask/src/record.rs`): xtask's `achq` dependency gained `ureq` and `rustls`, still without `onboarding`.
+  - **Gateway calls** go through `protocol::encode` and `UreqTransport`. **Onboarding calls** send raw JSON through ureq.
+  - **Refusal:** anything but ProviderID 99 is refused, with a test.
+  - **Scrubbing:** the names in settlement items are replaced and the event reports trimmed to 40 rows, because the public sandbox's reports hold **other users' payments**.
+  - **The fee profile:** the one fake profile is kept between runs rather than created again; the second run created it, after the first was refused for missing fees.
+  - It writes `recorded/README.md`, which holds a line per call.
+- **Fixtures:** the recordings replaced the synthesized Express Verify, fee-profile and onboarding-error fixtures. `onboarding_created.json` stays synthesized, since no application is ever submitted. `tests/recorded.rs` decodes all 23 recordings strictly.
+- **`tests/sandbox.rs`:** 6 tests, `#[ignore]`d and also gated on `ACHQ_SANDBOX`, cover the token → payment → update/hold/cancel flow, a tokenized payment, the Express Verify reject, account checks, reports (with paging), and the blocking client. **All passed against the sandbox** after `run_express_verify(true)` was added (see `ApiError::is_queued`).
+- **UI snapshot:** `derive_ui` now skips without `onboarding`, because rustc's list of a trait's implementations depends on the features.
+- **Ergonomic constructors** were done in Stage 3. The onboarding builders cover the rest.
+- **Tests:** 264 pass with all features, and 7 are ignored (the 6 sandbox tests and one doctest).
+- **Verified:** the full matrix (fmt, clippy ×5, tests ×3, MSRV, minimal versions, 5 wasm, docs, docs.rs, deny, codegen, conformance, drift), plus the live recording and sandbox suite.
 
 ## Stage 6: Hardening, docs, release prep
 **Goal**:
@@ -617,15 +650,37 @@ let token: Option<AchqToken> = created.token;
 7. `./scripts/test-packaged-crate.sh` and `cargo publish --dry-run --workspace`
 
 ## Open items to resolve during implementation (not blocking)
-- **`ResponseType=JSON` (orkestra):** is it needed for a JSON response when it is omitted? Does `Accept` suffice?
-- **`ECheck.VerifyPlus` response shape:** the placement and casing of `OwnerAuth`, the date format of `AccountCreated`/`AccountLastSeen`, and whether NEG is `Approved` or `Declined`.
-- **`Phone Number`** (with a space) in the bank-account-ID fragment: is the wire name `Phone`, `PhoneNumber` or `Phone Number`? Its type is integer, max 10.
-- **Error bodies:** does the event query return a JSON envelope or a CSV `Command Response` row? Are the CSV fields quoted when the return explanation contains commas?
-- **Case sensitivity:** `Transact_ReferenceID` vs `TransAct_ReferenceID` on requests. Does the gateway accept either?
-- **`Run_ExpressVerify`:** required or optional, and what the default is when omitted. This interacts with the merchant-level rulesets ("First time WEB", etc.).
+Resolved by `cargo xtask record` against the public sandbox on 2026-11-05 (see `achq/tests/data/recorded/README.md`):
+- ~~**`ResponseType=JSON` (orkestra):** is it needed for a JSON response when it is omitted?~~ **Not needed:** without it, every command answers in JSON (or, for events, in CSV/text), whatever the `Accept` header.
+- ~~**`ECheck.VerifyPlus` response shape**~~ **Resolved:**
+  - `OwnerAuth` is a top-level object `{Status, Code, Description, AccountType}`, which is read as planned.
+  - `AccountCreated`/`AccountLastSeen` are local ISO date-times, now typed `LocalDateTime`.
+  - A negative owner check is **Approved**, with `NEG` as data, not an error.
+- ~~**Error bodies:** does the event query return a JSON envelope or a CSV `Command Response` row?~~ **Neither:**
+  - A failed event query answers in **plain text**: `Command Error. 100:Invalid Gateway Credentials:Provider_Credentials). Please Contact Technical Support`. It is now parsed into `Error::Api`.
+  - Approved reports have **no** trailer row, always 11 fields per row, and no quoting.
+- ~~**Case sensitivity:** `Transact_ReferenceID` vs `TransAct_ReferenceID`~~ **Both work:** the refund's `TransAct_` is understood (refused with 103 for the payment's status, not 105 for an unknown ID).
+- ~~**Onboarding:** the sandbox behaviour of `/api/onboarding` for ProviderID 99~~ **Resolved:**
+  - Errors are HTTP 400 `{errorCode: "400", message, additionalInformation, apiRequestId, apiRequestTimeStamp}`; the timestamp has no offset.
+  - The fee endpoint **requires every fee** (`Fee.FeeProfile.SetupFee Required`), although the schema marks them optional, so `FeeSchedule` always sends them, defaulting to 0. It answers `{feeProfileId, status: "Success", …}`.
+  - No merchant application was submitted (decided with the user), so `MerchantOnboarded` stays modelled from the schema.
+
+Found by the recording, and handled:
+- **Numeric IDs:** settlements send `MerchantID` and settlement items `Transact_ReferenceID` as JSON **numbers**. Every `string_id!` now reads numbers too.
+- **Undocumented codes:**
+  - response code **202** "Failed Express Verify" (a rejected account, now `ResponseCode::FAILED_EXPRESS_VERIFY` and `ApiError::is_account_rejected`);
+  - Express Verify codes **P70** "VALIDATED" and **P41** "NEGATIVE INFO" on payments.
+- **Undocumented fields:** settlement items carry `CurrentStatus`, `funding_action` and `funding_direction`, now typed.
+- **The events and statuses:** orkestra had the two columns swapped. The event is `Failed Verification`, and the status is `Rejected`.
+- **Queued payments:** a payment sent **without** `Run_ExpressVerify=Yes` stays queued, and changing it fails with 103 "Payment still in a queued state. Please try again later.", for over 30 seconds in the sandbox. With Express Verify it can be changed at once. This is now `ApiError::is_queued`.
+- **Repeated cancellation:** cancelling a cancelled payment is Approved.
+
+Still open:
+- **`Phone Number`** (with a space) in the bank-account-ID fragment: is the wire name `Phone`, `PhoneNumber` or `Phone Number`? It is accepted either way, so a recording cannot tell whether it is used.
+- **`Run_ExpressVerify`:** the guides call it required, yet it may be omitted. When it is omitted, payments are queued (above); whether the merchant's ruleset then verifies them is not observable in the sandbox.
 - **Releasing a hold:** is there a command, or does `ECheck.Update` release it?
-- **`Customer_IPAddress`:** IPv4 only (max length 15)? Confirm before typing it as `Ipv4Addr`; otherwise use `IpAddr` and validate the length.
-- **Onboarding:** the sandbox behaviour of `/api/onboarding` for ProviderID 99, and whether `status` values are enumerable.
+- **`Customer_IPAddress`:** whether IPv6 (longer than 15 characters) is accepted. Validation allows only up to 15 characters.
+- **Onboarding:** the merchant application's 200 response, and whether `authorizedRepresentative` is really required; not submitted, by decision. Also whether `transferProcessorToken`'s 10-character limit is enforced (not validated).
 - **Repository:** `lendsimple/achq-rs`? This sets the badge and CI URLs.
 - **Webhooks:** the docs said "Webhooks … are up next" (Feb 2023), but none are documented. Out of scope; revisit if ACHQ publishes them.
 

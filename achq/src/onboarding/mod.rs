@@ -1,9 +1,14 @@
 //! The onboarding API, for platforms enrolling their merchants with ACHQ.
 //!
-//! This release has the industry table a merchant application classifies the
-//! business with: an [`Industry`] (the specific industry) and its
-//! [`IndustryCategory`]. Creating merchants and fee profiles comes in a later
-//! release.
+//! A [`MerchantApplication`] describes the business, its owner, the payment
+//! services it needs, its bank accounts and its fees; the client's
+//! [`onboarding`](crate::Client::onboarding) handle submits it, and creates
+//! [`FeeSchedule`]s to assign to merchants by ID. The business is classified with
+//! an [`Industry`] (the specific industry) and its [`IndustryCategory`].
+//!
+//! Unlike the gateway, the onboarding API takes JSON, with the platform's
+//! credentials in headers, and reports errors as
+//! [`Error::Onboarding`](crate::Error::Onboarding).
 
 /// Defines [`IndustryCategory`] and [`Industry`] from the generated table in
 /// `industry.rs`.
@@ -76,8 +81,10 @@ macro_rules! industry_table {
     };
 }
 
+mod fees;
 #[rustfmt::skip]
 mod industry;
+mod merchant;
 
 use std::fmt;
 use std::str::FromStr;
@@ -90,7 +97,13 @@ pub struct UnknownIndustry {
     name: String,
 }
 
+pub use fees::{FeeProfileCreated, FeeSchedule};
 pub use industry::{Industry, IndustryCategory};
+pub use merchant::{
+    AuthorizedRepresentative, BankAccounts, BusinessEntity, BusinessType, FeeChoice,
+    FundingAccount, IndustryChoice, Limits, MerchantApplication, MerchantOnboarded,
+    OnboardFunctions, PaymentProfile, PrincipalOwner,
+};
 
 impl fmt::Display for IndustryCategory {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

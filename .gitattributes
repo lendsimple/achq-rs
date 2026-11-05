@@ -1,6 +1,7 @@
 # Tests compare these byte for byte, so keep them exactly as committed on every OS.
 *.json -text
 *.csv -text
+achq/tests/data/** -text
 *.rs text eol=lf
 *.snap text eol=lf
 *.stderr text eol=lf

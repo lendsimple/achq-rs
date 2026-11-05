@@ -10,6 +10,7 @@ use time::Date;
 
 use crate::Model;
 use crate::error::Error;
+use crate::events::PaymentStatus;
 use crate::macros::string_enum;
 use crate::operation::Decode;
 use crate::payments::PaymentDirection;
@@ -185,6 +186,15 @@ pub struct SettlementItem {
     pub merchant_reference_id: Option<MerchantReferenceId>,
     #[serde(rename = "Provider_TransactionID", default)]
     pub provider_transaction_id: Option<ProviderTransactionId>,
+    /// The payment's status now. Undocumented; the gateway sends it.
+    #[serde(rename = "CurrentStatus", default)]
+    pub current_status: Option<PaymentStatus>,
+    /// What the payment's funds were for, such as `settlement`. Undocumented.
+    #[serde(rename = "funding_action", default)]
+    pub funding_action: Option<String>,
+    /// Which way the payment's funds moved, such as `deposit`. Undocumented.
+    #[serde(rename = "funding_direction", default)]
+    pub funding_direction: Option<String>,
 }
 
 /// A page of the payments in a settlement, with the settlement's summary.

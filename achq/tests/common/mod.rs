@@ -21,6 +21,7 @@ pub const PROVIDER_KEY: &str = "provider-s3cret";
 pub const MERCHANT_KEY: &str = "merchant-s3cret";
 pub const ACCOUNT_NUMBER: &str = "987650123";
 pub const TAX_ID: &str = "123456789";
+pub const SSN: &str = "987654321";
 
 pub fn provider() -> ProviderCredentials {
     ProviderCredentials::new("99", "provider-gate", PROVIDER_KEY)
@@ -125,6 +126,11 @@ impl Answer {
         Self::json(fixture(&format!("responses/{name}")))
     }
 
+    /// A response recorded from the sandbox, under `tests/data/recorded`.
+    pub fn recorded(name: &str) -> Self {
+        Self::json(fixture(&format!("recorded/{name}")))
+    }
+
     /// Event tracking's answer: CSV, as plain text.
     pub fn csv(body: impl Into<Vec<u8>>) -> Self {
         Self::with("text/plain; charset=utf-8", body)
@@ -153,6 +159,7 @@ impl Answer {
 impl MockApi {
     fn mock(
         server: &mut mockito::ServerGuard,
+        api_path: Option<&str>,
         answer: Answer,
     ) -> (mockito::Mock, Arc<Mutex<Option<Received>>>) {
         let received = Arc::new(Mutex::new(None));
@@ -163,9 +170,20 @@ impl MockApi {
             body,
             delay,
         } = answer;
-        let mock = server
-            .mock("POST", GATEWAY_PATH)
-            .match_header("content-type", "application/x-www-form-urlencoded")
+        let mock = match api_path {
+            // The gateway: credentials in the form.
+            None => server
+                .mock("POST", GATEWAY_PATH)
+                .match_header("content-type", "application/x-www-form-urlencoded"),
+            // The onboarding API: credentials in headers.
+            Some(path) => server
+                .mock("POST", format!("/api{path}").as_str())
+                .match_header("content-type", "application/json")
+                .match_header("providerid", "99")
+                .match_header("provider_gateid", "provider-gate")
+                .match_header("provider_gatekey", PROVIDER_KEY),
+        };
+        let mock = mock
             .match_header("accept", "application/json")
             .match_header("user-agent", mockito::Matcher::Regex("^achq-rs/".into()))
             .with_status(status)
@@ -185,9 +203,19 @@ impl MockApi {
         (mock, received)
     }
 
+    /// A mock gateway.
     pub fn new(answer: Answer) -> Self {
+        Self::create(None, answer)
+    }
+
+    /// A mock onboarding API, answering `POST /api<path>`.
+    pub fn api(path: &str, answer: Answer) -> Self {
+        Self::create(Some(path), answer)
+    }
+
+    fn create(api_path: Option<&str>, answer: Answer) -> Self {
         let mut server = mockito::Server::new();
-        let (mock, received) = Self::mock(&mut server, answer);
+        let (mock, received) = Self::mock(&mut server, api_path, answer);
         Self {
             mock: mock.create(),
             server,
@@ -195,9 +223,19 @@ impl MockApi {
         }
     }
 
+    /// A mock gateway, for async tests.
     pub async fn new_async(answer: Answer) -> Self {
+        Self::create_async(None, answer).await
+    }
+
+    /// A mock onboarding API, for async tests.
+    pub async fn api_async(path: &str, answer: Answer) -> Self {
+        Self::create_async(Some(path), answer).await
+    }
+
+    async fn create_async(api_path: Option<&str>, answer: Answer) -> Self {
         let mut server = mockito::Server::new_async().await;
-        let (mock, received) = Self::mock(&mut server, answer);
+        let (mock, received) = Self::mock(&mut server, api_path, answer);
         Self {
             mock: mock.create_async().await,
             server,
@@ -284,6 +322,81 @@ impl std::io::Write for LogCapture {
 }
 
 // Requests for the client cases.
+
+#[cfg(feature = "onboarding")]
+pub fn fees() -> achq::onboarding::FeeSchedule {
+    achq::onboarding::FeeSchedule::builder()
+        .name("achq-rs test")
+        .transaction_fee(dec!(0.25))
+        .return_fee(dec!(5))
+        .percent_fee(dec!(0.5))
+        .percent_cap(dec!(10))
+        .build()
+}
+
+/// A complete, made-up merchant application.
+#[cfg(feature = "onboarding")]
+pub fn application() -> achq::onboarding::MerchantApplication {
+    use achq::onboarding::*;
+    use achq::payments::SecCode;
+    MerchantApplication::builder()
+        .business_entity(
+            BusinessEntity::builder()
+                .legal_business_name("Bluth Company LLC")
+                .tax_id(TAX_ID)
+                .company_dba("Bluth Bananas")
+                .industry(Industry::SaasAndSoftwareApplications)
+                .kind(BusinessType::Llc)
+                .website("https://example.com")
+                .phone("5558675309")
+                .business_description("Frozen bananas")
+                .address1("1 Pier Way")
+                .city("Newport Beach")
+                .state("CA")
+                .zip("92660")
+                .build(),
+        )
+        .principal_owner(
+            PrincipalOwner::builder()
+                .first_name("George")
+                .last_name("Bluth")
+                .job_title("CEO")
+                .email("george@example.com")
+                .mobile_phone("5558675309")
+                .ssn(SSN)
+                .ownership_percent(60)
+                .dob(date!(1950 - 01 - 02))
+                .address1("1 Pier Way")
+                .city("Newport Beach")
+                .state("CA")
+                .zip("92660")
+                .ip_address(std::net::Ipv4Addr::new(203, 0, 113, 9))
+                .build(),
+        )
+        .payment_profile(
+            PaymentProfile::builder()
+                .charges(Limits::new(100_000, 500, 5_000))
+                .payouts(Limits::new(50_000, 200, 5_000))
+                .consumers(true)
+                .sec_codes(vec![SecCode::Web])
+                .statement_descriptor("BANANAS")
+                .customer_service_phone("5558675309")
+                .customer_service_email("help@example.com")
+                .service_use_case("Sale of goods")
+                .build(),
+        )
+        .bank_accounts(
+            BankAccounts::builder()
+                .transfers(FundingAccount::bank(
+                    "First Bank",
+                    "123123123",
+                    ACCOUNT_NUMBER,
+                ))
+                .build(),
+        )
+        .fees(FeeChoice::Schedule(fees()))
+        .build()
+}
 
 pub fn account() -> BankAccount {
     BankAccount::checking("123123123", ACCOUNT_NUMBER)

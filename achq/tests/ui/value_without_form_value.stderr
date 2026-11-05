@@ -14,8 +14,8 @@ error[E0277]: `bool` has no single form encoding
             AccountType
             AchqToken
             Amount
+            BusinessType
             CheckType
             CommandId
             CommandStatus
-            DeliveryWindow
           and $N others

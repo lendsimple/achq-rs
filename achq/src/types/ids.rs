@@ -6,7 +6,50 @@
 //! refund) identifies the payment afterwards. The IDs of updates, cancellations and
 //! holds identify only those commands.
 
+use std::fmt;
+
+use serde::Deserializer;
+use serde::de::{self, Visitor};
+
 use crate::macros::string_id;
+
+/// Reads an ID from a string (trimmed) or a whole number.
+pub(crate) fn deserialize_id<'de, D: Deserializer<'de>>(
+    deserializer: D,
+) -> Result<String, D::Error> {
+    deserializer.deserialize_any(IdVisitor)
+}
+
+struct IdVisitor;
+
+impl Visitor<'_> for IdVisitor {
+    type Value = String;
+
+    fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("an ID, as a string or a whole number")
+    }
+
+    fn visit_str<E: de::Error>(self, value: &str) -> Result<String, E> {
+        Ok(value.trim().to_owned())
+    }
+
+    fn visit_string<E: de::Error>(self, value: String) -> Result<String, E> {
+        let trimmed = value.trim();
+        Ok(if trimmed.len() == value.len() {
+            value
+        } else {
+            trimmed.to_owned()
+        })
+    }
+
+    fn visit_u64<E: de::Error>(self, value: u64) -> Result<String, E> {
+        Ok(value.to_string())
+    }
+
+    fn visit_i64<E: de::Error>(self, value: i64) -> Result<String, E> {
+        Ok(value.to_string())
+    }
+}
 
 string_id! {
     /// The gateway's ID of a payment: the `TransAct_ReferenceID` returned when the

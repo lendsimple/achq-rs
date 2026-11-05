@@ -30,9 +30,9 @@ use serde::de::DeserializeOwned;
 
 use crate::credentials::{Endpoints, MerchantCredentials, ProviderCredentials};
 use crate::envelope::Envelope;
-use crate::error::{ApiError, Error, body_excerpt};
+use crate::error::{ApiError, Error, OnboardingError, body_excerpt};
 use crate::form::FormWriter;
-use crate::operation::{Operation, Scope};
+use crate::operation::{Endpoint, Operation, Scope};
 use crate::transport::{HttpRequest, HttpResponse, Method};
 use crate::validate::{ValidationError, Violation};
 
@@ -138,30 +138,55 @@ pub fn encode<O: Operation>(op: &O, context: &Context) -> Result<HttpRequest, Er
     if let Some(err) = ValidationError::from_violations(violations) {
         return Err(err.into());
     }
-    Ok(encode_unvalidated(op, context))
+    encode_unvalidated(op, context)
 }
 
 /// Like [`encode`], without validating `op` first. A merchant command without a
 /// merchant is sent without merchant credentials, for the gateway to refuse.
-pub fn encode_unvalidated<O: Operation>(op: &O, context: &Context) -> HttpRequest {
-    let form = form(op, context);
-    HttpRequest {
-        method: Method::Post,
-        url: context.endpoints.gateway().to_owned(),
-        headers: vec![
-            ("accept", "application/json".to_owned()),
-            (
-                "content-type",
-                "application/x-www-form-urlencoded".to_owned(),
-            ),
-            ("user-agent", context.user_agent.clone()),
-        ],
-        body: form.encode().into_bytes(),
-        timeout: None,
+///
+/// Fails only if an onboarding API body cannot be written as JSON.
+pub fn encode_unvalidated<O: Operation>(op: &O, context: &Context) -> Result<HttpRequest, Error> {
+    match O::ENDPOINT {
+        Endpoint::Gateway => Ok(HttpRequest {
+            method: Method::Post,
+            url: context.endpoints.gateway().to_owned(),
+            headers: vec![
+                ("accept", "application/json".to_owned()),
+                (
+                    "content-type",
+                    "application/x-www-form-urlencoded".to_owned(),
+                ),
+                ("user-agent", context.user_agent.clone()),
+            ],
+            body: form(op, context).encode().into_bytes(),
+            timeout: None,
+        }),
+        Endpoint::Api(path) => {
+            let body = op
+                .json_body()
+                .unwrap_or_else(|| Ok(b"{}".to_vec()))
+                .map_err(Error::Encode)?;
+            let provider = &context.provider;
+            Ok(HttpRequest {
+                method: Method::Post,
+                url: format!("{}{path}", context.endpoints.api()),
+                headers: vec![
+                    ("accept", "application/json".to_owned()),
+                    ("content-type", "application/json".to_owned()),
+                    ("user-agent", context.user_agent.clone()),
+                    ("providerid", provider.provider_id().to_owned()),
+                    ("provider_gateid", provider.gate_id().to_owned()),
+                    ("provider_gatekey", provider.expose_key().to_owned()),
+                ],
+                body,
+                timeout: None,
+            })
+        }
     }
 }
 
-/// The form body of `op`: the credentials, the command, then its fields.
+/// The form body of a gateway command: the credentials, the command, then its
+/// fields. (The onboarding API's commands send JSON instead.)
 ///
 /// The gate keys are marked sensitive, so [`FormWriter::redacted`] hides them.
 pub fn form<O: Operation>(op: &O, context: &Context) -> FormWriter {
@@ -191,18 +216,44 @@ pub fn form<O: Operation>(op: &O, context: &Context) -> FormWriter {
 
 /// Reads the response to `O`.
 ///
-/// Any status other than 2xx fails with [`Error::Status`]. The gateway reports
-/// whether a command succeeded in the body: a `CommandStatus` other than
+/// Any status other than 2xx fails with [`Error::Status`], except the onboarding
+/// API's error responses, which fail with [`Error::Onboarding`]. The gateway
+/// reports whether a command succeeded in the body: a `CommandStatus` other than
 /// `Approved` fails with [`Error::Api`].
 pub fn decode<O: Operation>(response: &HttpResponse) -> Result<O::Response, Error> {
     if (200..300).contains(&response.status) {
-        O::decode(response)
-    } else {
-        Err(Error::Status {
-            status: response.status,
-            body: body_excerpt(&response.body),
-        })
+        return O::decode(response);
     }
+    if let Endpoint::Api(_) = O::ENDPOINT
+        && is_json_object(&response.body)
+        && let Ok(error) = serde_json::from_slice::<OnboardingError>(&response.body)
+        && error.has_content()
+    {
+        return Err(Error::Onboarding(Box::new(
+            error.with_status(response.status),
+        )));
+    }
+    Err(Error::Status {
+        status: response.status,
+        body: body_excerpt(&response.body),
+    })
+}
+
+/// Reads a JSON body as `T`, whatever its `Content-Type` says.
+#[doc(hidden)]
+pub fn decode_json<T: DeserializeOwned>(response: &HttpResponse) -> Result<T, Error> {
+    if !is_json_object(&response.body) {
+        return Err(Error::UnexpectedContentType {
+            status: response.status,
+            expected: "JSON",
+            content_type: response
+                .content_type()
+                .unwrap_or_else(|| "an unlabeled body".to_owned()),
+            body: body_excerpt(&response.body),
+        });
+    }
+    serde_json::from_slice(&response.body)
+        .map_err(|e| Error::decode(e, response.status, &response.body))
 }
 
 /// Whether a body is a JSON object, judged by its first byte rather than its

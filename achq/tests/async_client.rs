@@ -175,3 +175,38 @@ fn futures_are_send() {
     let merchant_clone = merchant.clone();
     assert_send(&merchant_clone);
 }
+
+#[cfg(feature = "onboarding")]
+mod onboarding {
+    use super::*;
+
+    #[tokio::test]
+    async fn submits_an_application_as_json_with_header_credentials() {
+        let api =
+            MockApi::api_async("/onboarding", Answer::fixture("onboarding_created.json")).await;
+        let created = platform(&api)
+            .onboarding()
+            .create_merchant(&common::application())
+            .await
+            .unwrap();
+        assert_eq!(created.id.as_str(), "5c1d1e2a-8f4b-4b7e-9a51-2f0d6c3b9e10");
+        let body: serde_json::Value = serde_json::from_slice(&api.received().body).unwrap();
+        assert_eq!(body["principalOwner"]["ssn"], common::SSN);
+        assert!(body.get("ProviderID").is_none());
+    }
+
+    #[tokio::test]
+    async fn a_rejected_application_is_an_onboarding_error() {
+        let api = MockApi::api_async(
+            "/onboarding/fees",
+            Answer::recorded("onboarding_invalid.json").status(400),
+        )
+        .await;
+        let err = platform(&api)
+            .onboarding()
+            .create_fee_profile(&common::fees())
+            .await
+            .unwrap_err();
+        assert!(matches!(err, Error::Onboarding(_)), "{err:?}");
+    }
+}

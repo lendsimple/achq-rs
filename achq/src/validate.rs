@@ -180,7 +180,9 @@ pub(crate) use no_constraints;
 no_constraints!(
     String,
     bool,
+    u8,
     u16,
+    u64,
     u32,
     i32,
     i64,
@@ -196,6 +198,18 @@ no_constraints!(
 #[doc(hidden)]
 pub trait Numeric {
     fn to_decimal(&self) -> Decimal;
+}
+
+impl Numeric for u8 {
+    fn to_decimal(&self) -> Decimal {
+        Decimal::from(*self)
+    }
+}
+
+impl Numeric for u64 {
+    fn to_decimal(&self) -> Decimal {
+        Decimal::from(*self)
+    }
 }
 
 impl Numeric for u16 {

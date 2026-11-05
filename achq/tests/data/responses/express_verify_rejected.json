@@ -1,1 +1,0 @@
-{"CommandStatus":"Declined","Description":"Transaction was Rejected by Gateway","ErrorInformation":null,"ExpressVerify":{"Status":"NEG","Code":"GS02","Description":"Invalid Account Number"},"ResponseData":null,"ACHQToken":null,"Provider_TransactionID":"order-1","TransAct_ReferenceID":"14477300","ResponseCode":"301"}

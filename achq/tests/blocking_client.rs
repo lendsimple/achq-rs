@@ -137,3 +137,19 @@ fn a_refused_connection_is_a_transport_error() {
         .unwrap_err();
     assert!(matches!(err, Error::Transport(_)), "{err:?}");
 }
+
+#[cfg(feature = "onboarding")]
+#[test]
+fn creates_a_fee_profile() {
+    let api = MockApi::api(
+        "/onboarding/fees",
+        Answer::recorded("fee_profile_created.json"),
+    );
+    let created = platform(&api)
+        .onboarding()
+        .create_fee_profile(&common::fees())
+        .unwrap();
+    assert_eq!(created.fee_profile_id.as_str(), "36438685");
+    let body: serde_json::Value = serde_json::from_slice(&api.received().body).unwrap();
+    assert_eq!(body["feeName"], "achq-rs test");
+}

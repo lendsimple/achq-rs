@@ -7,7 +7,7 @@ use serde::de::{self, Visitor};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::macros::string_enum;
-use crate::types::{AchqToken, ProviderTransactionId};
+use crate::types::{AchqToken, LocalDateTime, ProviderTransactionId};
 
 /// The gateway's answer to a command, before it is read as the command's result.
 ///
@@ -150,6 +150,7 @@ response_codes! {
     REQUIRED_FIELD_MISSING = 150, "Required field missing";
     INVALID_FIELD_VALUE = 151, "Field value is not valid";
     FIELD_TOO_LONG = 152, "Field value exceeds maximum length";
+    FAILED_EXPRESS_VERIFY = 202, "Failed Express Verify (undocumented; seen in the sandbox)";
     INVALID_ROUTING_NUMBER = 209, "Invalid routing number";
     INVALID_ACCOUNT_NUMBER = 210, "Invalid bank account number";
     INVALID_ACHQ_TOKEN = 212, "Invalid ACHQToken";
@@ -241,10 +242,10 @@ pub struct ExpressVerify {
     pub description: Option<String>,
     /// When the account joined the real-time verification network.
     #[serde(rename = "AccountCreated", default)]
-    pub account_created: Option<String>,
+    pub account_created: Option<LocalDateTime>,
     /// When the network last updated the account's status.
     #[serde(rename = "AccountLastSeen", default)]
-    pub account_last_seen: Option<String>,
+    pub account_last_seen: Option<LocalDateTime>,
     /// The bank of the routing number.
     #[serde(rename = "BankName", default)]
     pub bank_name: Option<String>,
@@ -321,6 +322,12 @@ string_enum! {
         NonDemandDeposit = "RT04",
         /// NEG: recent negative data; accept with risk.
         AcceptWithRiskRecent = "RT05",
+        /// POS: the account was validated. Undocumented; the sandbox reports it for
+        /// payments' Express Verify.
+        Validated = "P70",
+        /// NEG: negative information was found. Undocumented; the sandbox reports
+        /// it for payments' Express Verify.
+        NegativeInfo = "P41",
         /// UNK: no ownership check was made for the account.
         NoOwnerData = "0",
         /// NEG: the account failed verification, so its owner was not checked.

@@ -1,7 +1,8 @@
 # Test fixtures
 
-Where each fixture comes from. Stage 5 adds responses recorded from the public
-sandbox (`cargo xtask record`), which will replace the synthesized ones.
+Where each fixture comes from. `recorded/` holds real responses from ACHQ's public
+sandbox, written by `cargo xtask record` (see `recorded/README.md`); they replaced
+the synthesized fixtures they cover.
 
 ## `responses/`
 
@@ -19,8 +20,8 @@ sandbox (`cargo xtask record`), which will replace the synthesized ones.
 | `declined_credentials.json` | The bad-credentials response in orkestra/orkestra-transactor's tests, with its legacy `AVS`, `CVN` and `PaymentKey` keys |
 | `internal_error.json` | orkestra's internal-error response, with a documented code (600) in place of its placeholder |
 | `legacy_keys.json` | orkestra's approved response, with `ResponseCode` `000` in place of its placeholder |
-| `express_verify_rejected.json` | Synthesized: a payment rejected for its account (code 301, `GS02`), the shape the sandbox's `987654321` account should produce |
 | `iis_error.html` | Synthesized: an ASP.NET error page |
+| `onboarding_created.json` | Synthesized from the onboarding schema's `MerchantOnboardingResponse`; no application is ever submitted to the sandbox, so it is not recorded |
 
 ## `events/`
 

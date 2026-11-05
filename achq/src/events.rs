@@ -15,7 +15,7 @@ use serde::de::IgnoredAny;
 use time::Date;
 
 use crate::Model;
-use crate::envelope::{Envelope, VerificationCode, VerificationStatus};
+use crate::envelope::{Envelope, ResponseCode, VerificationCode, VerificationStatus};
 use crate::error::{ApiError, Error, body_excerpt};
 use crate::macros::string_enum;
 use crate::operation::Decode;
@@ -228,6 +228,10 @@ impl Decode for EventBatch {
                 command_id: envelope.reference().map(CommandId::from),
             });
         }
+        let text = String::from_utf8_lossy(&response.body);
+        if let Some(error) = command_error(&text) {
+            return Err(ApiError::new(response.status, error).into());
+        }
         if response.body.iter().find(|b| !b.is_ascii_whitespace()) == Some(&b'<') {
             return Err(Error::UnexpectedContentType {
                 status: response.status,
@@ -312,23 +316,69 @@ fn parse_csv(response: &HttpResponse) -> Result<EventBatch, Error> {
 /// row, as an envelope.
 fn trailer_envelope(record: &csv::StringRecord) -> Envelope<serde_json::Value> {
     let cell = |i: usize| record.get(i).filter(|v| !v.is_empty());
+    envelope(cell(1), cell(2), cell(3), cell(4), cell(5))
+}
+
+/// A failed query, which the gateway answers in plain text rather than CSV:
+/// `Command Error. 100:Invalid Gateway Credentials:Provider_Credentials). Please
+/// Contact Technical Support`.
+fn command_error(body: &str) -> Option<Envelope<serde_json::Value>> {
+    const PREFIX: &str = "command error";
+    let body = body.trim();
+    if !body
+        .get(..PREFIX.len())
+        .is_some_and(|start| start.eq_ignore_ascii_case(PREFIX))
+    {
+        return None;
+    }
+    let detail = body[PREFIX.len()..].trim_start_matches(['.', ' ']);
+    let detail = detail.split_once(')').map_or(detail, |(inside, _)| inside);
+    let mut parts = detail
+        .splitn(3, ':')
+        .map(str::trim)
+        .map(|part| Some(part).filter(|part| !part.is_empty()));
+    let code = parts.next().flatten();
+    if !code.is_some_and(|code| code.bytes().all(|b| b.is_ascii_digit())) {
+        // Not `<code>:<description>:<information>`: keep the text as it is.
+        return Some(envelope(
+            Some("Error"),
+            None,
+            Some(detail.trim()),
+            None,
+            None,
+        ));
+    }
+    let description = parts.next().flatten();
+    let information = parts.next().flatten();
+    Some(envelope(
+        Some("Error"),
+        code,
+        description,
+        information,
+        None,
+    ))
+}
+
+fn envelope(
+    status: Option<&str>,
+    code: Option<&str>,
+    description: Option<&str>,
+    information: Option<&str>,
+    reference: Option<&str>,
+) -> Envelope<serde_json::Value> {
     let json = serde_json::json!({
-        "CommandStatus": cell(1),
-        "ResponseCode": cell(2),
-        "Description": cell(3),
-        "ErrorInformation": cell(4),
-        "TransAct_ReferenceID": cell(5),
+        "CommandStatus": status,
+        "Description": description,
+        "ErrorInformation": information,
+        "TransAct_ReferenceID": reference,
     });
-    serde_json::from_value(json).unwrap_or_else(|_| {
-        // A malformed response code: keep the rest.
-        let mut envelope: Envelope<serde_json::Value> =
-            serde_json::from_value(serde_json::json!({})).expect("an empty envelope reads");
-        envelope.command_status = cell(1).map(Into::into);
-        envelope.description = cell(3).map(str::to_owned);
-        envelope.error_information = cell(4).map(str::to_owned);
-        envelope.reference_id = cell(5).map(str::to_owned);
-        envelope
-    })
+    let mut envelope: Envelope<serde_json::Value> =
+        serde_json::from_value(json).expect("an envelope of strings reads");
+    // A code that is not a number is dropped, keeping the rest.
+    envelope.response_code = code
+        .and_then(|c| c.trim().parse().ok())
+        .map(ResponseCode::new);
+    envelope
 }
 
 #[cfg(test)]
@@ -348,6 +398,31 @@ mod tests {
         );
         assert_eq!(ReturnCode::from("r01"), ReturnCode::R01);
         assert_eq!(ReturnCode::from("R85"), ReturnCode::Other("R85".into()));
+    }
+
+    #[test]
+    fn reads_plain_text_command_errors() {
+        let envelope = command_error(
+            "Command Error. 100:Invalid Gateway Credentials:Provider_Credentials). \
+             Please Contact Technical Support",
+        )
+        .unwrap();
+        assert_eq!(
+            envelope.response_code,
+            Some(ResponseCode::INVALID_CREDENTIALS)
+        );
+        assert_eq!(
+            envelope.description.as_deref(),
+            Some("Invalid Gateway Credentials")
+        );
+        assert_eq!(
+            envelope.error_information.as_deref(),
+            Some("Provider_Credentials")
+        );
+        let vague = command_error("Command Error. Something broke").unwrap();
+        assert_eq!(vague.response_code, None);
+        assert_eq!(vague.description.as_deref(), Some("Something broke"));
+        assert!(command_error("14447204,,2001,Created").is_none());
     }
 
     #[test]

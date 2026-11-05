@@ -1,4 +1,4 @@
-//! What every gateway command has in common.
+//! What every command has in common.
 
 use std::fmt::Display;
 
@@ -7,7 +7,8 @@ use crate::form::{FieldMeta, FormWriter};
 use crate::transport::HttpResponse;
 use crate::validate::{Path, Validate, ValidationError, Violation};
 
-/// One gateway command: its name, its fields, and the result it answers with.
+/// One command: its name, its fields, and the result it answers with. Most are
+/// the gateway's form-encoded commands; the onboarding API's are JSON.
 ///
 /// Every command has a type in [`operations`](crate::operations), such as
 /// [`payments::CreatePayment`](crate::operations::payments::CreatePayment).
@@ -20,8 +21,13 @@ pub trait Operation {
     /// The operation's name in the client, such as `payments.create`.
     const NAME: &'static str;
 
-    /// The gateway command, such as `ECheck.ProcessPayment`.
+    /// The gateway command, such as `ECheck.ProcessPayment`, or the onboarding
+    /// API's route, such as `POST /onboarding`.
     const COMMAND: &'static str;
+
+    /// Where the command is sent.
+    #[doc(hidden)]
+    const ENDPOINT: Endpoint;
 
     /// Whose credentials the command needs.
     const SCOPE: Scope;
@@ -42,6 +48,10 @@ pub trait Operation {
     #[doc(hidden)]
     fn form_fields(out: &mut Vec<FieldMeta>);
 
+    /// The JSON body of an onboarding API command; `None` for the gateway's.
+    #[doc(hidden)]
+    fn json_body(&self) -> Option<Result<Vec<u8>, serde_json::Error>>;
+
     /// Reads a successful (2xx) response.
     #[doc(hidden)]
     fn decode(response: &HttpResponse) -> Result<Self::Response, Error>;
@@ -55,6 +65,17 @@ pub enum Scope {
     Merchant,
     /// The platform's only: reports across the platform's merchants.
     Platform,
+}
+
+/// Where a command is sent.
+#[doc(hidden)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Endpoint {
+    /// The gateway: a form-encoded `POST` with the credentials in the form.
+    Gateway,
+    /// The onboarding API: a JSON `POST` to this path, with the credentials in
+    /// headers.
+    Api(&'static str),
 }
 
 /// A command's result, read from the gateway's response.

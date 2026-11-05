@@ -10,11 +10,12 @@ use common::{Answer, LogCapture, MockApi, merchant_credentials, provider};
 
 /// What the requests and responses carry that must never be logged: the gate
 /// keys, the account number, the tax ID, and the token the gateway returns.
-const SECRETS: [&str; 5] = [
+const SECRETS: [&str; 6] = [
     common::PROVIDER_KEY,
     common::MERCHANT_KEY,
     common::ACCOUNT_NUMBER,
     common::TAX_ID,
+    common::SSN,
     "achq-sandbox-3ff6d-b64fd-5a8a5",
 ];
 
@@ -39,6 +40,18 @@ fn assert_redacted(logs: &str) {
         "TaxID=[REDACTED]",
         r#""ACHQToken":"[REDACTED]""#,
         "RoutingNumber=123123123",
+    ] {
+        assert!(
+            logs.contains(expected),
+            "{expected} missing from logs:\n{logs}"
+        );
+    }
+    #[cfg(feature = "onboarding")]
+    for expected in [
+        r#"operation="onboarding.create_merchant""#,
+        r#""ssn":"[REDACTED]""#,
+        r#""taxId":"[REDACTED]""#,
+        r#""dob":"[REDACTED]""#,
     ] {
         assert!(
             logs.contains(expected),
@@ -75,6 +88,15 @@ fn blocking_client_logs_redact_secrets() {
         .tokens()
         .create(&common::token_request())
         .unwrap();
+    #[cfg(feature = "onboarding")]
+    let api = MockApi::api("/onboarding", Answer::fixture("onboarding_created.json"));
+    #[cfg(feature = "onboarding")]
+    achq::blocking::Client::builder(provider())
+        .endpoints(api.endpoints())
+        .build()
+        .onboarding()
+        .create_merchant(&common::application())
+        .unwrap();
     assert_redacted(&logs.contents());
 }
 
@@ -104,6 +126,16 @@ async fn async_client_logs_redact_secrets() {
     merchant(&api)
         .tokens()
         .create(&common::token_request())
+        .await
+        .unwrap();
+    #[cfg(feature = "onboarding")]
+    let api = MockApi::api_async("/onboarding", Answer::fixture("onboarding_created.json")).await;
+    #[cfg(feature = "onboarding")]
+    achq::Client::builder(provider())
+        .endpoints(api.endpoints())
+        .build()
+        .onboarding()
+        .create_merchant(&common::application())
         .await
         .unwrap();
     assert_redacted(&logs.contents());

@@ -102,6 +102,15 @@ impl<'de> Deserialize<'de> for LocalDateTime {
 
 crate::validate::no_constraints!(LocalDateTime);
 
+/// Serializes a date as `MM/DD/YYYY`, as the onboarding API's dates are written.
+#[cfg(feature = "onboarding")]
+pub(crate) fn serialize_mdy_slash<S: Serializer>(
+    date: &time::Date,
+    serializer: S,
+) -> Result<S::Ok, S::Error> {
+    serializer.serialize_str(&crate::form::with::mdy_slash(date))
+}
+
 #[cfg(test)]
 mod tests {
     use time::macros::datetime;

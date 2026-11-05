@@ -1,0 +1,24 @@
+---
+source: achq/tests/requests.rs
+expression: "encode(&achq::operations::onboarding::CreateFeeProfile::new(&fees),\n&platform())"
+---
+POST https://www.speedchex.com/api/onboarding/fees
+accept: application/json
+content-type: application/json
+provider_gateid: provider-gate
+provider_gatekey: <key>
+providerid: 99
+user-agent: achq-rs/test
+
+{
+  "bankIdFee": 0.0,
+  "bankStatusFee": 0.0,
+  "disputeFee": 0.0,
+  "feeName": "achq-rs test",
+  "monthlyFee": 0.0,
+  "percentCap": 10.0,
+  "percentFee": 0.5,
+  "returnFee": 5.0,
+  "setupFee": 0.0,
+  "transactionFee": 0.25
+}

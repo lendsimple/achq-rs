@@ -10,6 +10,11 @@
 #
 # An entry that no longer matches a difference is an error, as is a fragment that
 # is neither registered (in xtask/src/conformance.rs) nor listed in `unregistered`.
+#
+# The onboarding API's types are checked against onboarding/*.json by
+# achq/tests/onboarding_schema.rs, which lists their differences itself: xtask
+# builds achq without the onboarding feature, so that a broken generated
+# industry table never stops `cargo xtask codegen` from replacing it.
 
 # Fragments with no request type registered in xtask/src/conformance.rs yet.
 unregistered = []

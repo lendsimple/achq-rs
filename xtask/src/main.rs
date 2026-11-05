@@ -4,6 +4,7 @@ mod conformance;
 mod drift;
 mod industry;
 mod overrides;
+mod record;
 mod sources;
 
 use std::collections::BTreeMap;
@@ -24,7 +25,9 @@ tasks:
     fetch               download the documentation's pages over schema/,
                         updating schema/README.md
     drift               list what differs between schema/ and the pages the
-                        documentation serves, and any new reference pages";
+                        documentation serves, and any new reference pages
+    record              run every command against ACHQ's public sandbox and keep
+                        the raw responses in achq/tests/data/recorded/";
 
 /// The generated file, relative to the workspace root.
 const INDUSTRY_RS: &str = "achq/src/onboarding/industry.rs";
@@ -44,6 +47,7 @@ fn main() -> ExitCode {
         ["conformance"] => conformance(),
         ["fetch"] => fetch(),
         ["drift"] => drift(),
+        ["record"] => record::run(&workspace_root()),
         _ => {
             eprintln!("{USAGE}");
             return ExitCode::FAILURE;

@@ -122,8 +122,9 @@ macro_rules! string_enum {
     };
 }
 
-/// A newtype for an ID that is text. Read with surrounding whitespace trimmed, as
-/// the API sometimes pads IDs (`" 2001"`).
+/// A newtype for an ID that is text. Read from a string, with surrounding
+/// whitespace trimmed (the API sometimes pads IDs, as in `" 2001"`), or from a
+/// number (settlements send `MerchantID` as `2001`).
 ///
 /// With a leading `sensitive:`, `Debug` hides the value, for IDs that stand in for
 /// a bank account.
@@ -188,13 +189,7 @@ macro_rules! string_id {
 
         impl<'de> ::serde::Deserialize<'de> for $name {
             fn deserialize<D: ::serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-                let id = <::std::string::String as ::serde::Deserialize>::deserialize(deserializer)?;
-                let trimmed = id.trim();
-                Ok(if trimmed.len() == id.len() {
-                    Self(id)
-                } else {
-                    Self(trimmed.into())
-                })
+                $crate::types::ids::deserialize_id(deserializer).map(Self)
             }
         }
 
@@ -299,6 +294,13 @@ mod tests {
             PaymentDirection::FromCustomer
         );
         assert_eq!(PaymentDirection::FromCustomer.to_string(), "FromCustomer");
+    }
+
+    #[test]
+    fn ids_are_read_from_numbers() {
+        let id: MerchantId = serde_json::from_str("2001").unwrap();
+        assert_eq!(id.as_str(), "2001");
+        assert!(serde_json::from_str::<MerchantId>("1.5").is_err());
     }
 
     #[test]
