@@ -638,7 +638,35 @@ let token: Option<AchqToken> = created.token;
 - README doctests compile.
 - Examples build under their required features.
 
-**Status**: Not Started
+**Status**: Complete
+
+**Notes (as built)**:
+- **README:** follows repay's structure.
+  - Opening: an intro, features, MSRV, and the async charge example plus the blocking client.
+  - Usage: payment IDs, tracking status, verifying accounts, settlements (with paging), onboarding.
+  - Behaviour: errors (every `ApiError` predicate, including `is_queued` and its sandbox finding) and testing with the sandbox (the test accounts table, `test_mode`, the public-data warning).
+  - The rest: other HTTP clients, WebAssembly (with the gate-keys warning), logging, examples, development (the xtask commands), license.
+  - Its 8 Rust blocks compile as doctests through `ReadmeDoctests`.
+- **Examples:** six, each defaulting to the sandbox with an `ACHQ_*` environment override: `tokenize_and_charge`, `payment_lifecycle` (`PaymentId` vs `CommandId`, retrying while `is_queued`), `daily_events`, `settlements`, `charge_blocking` (ureq) and `create_fee_profile`. The last only prints its request unless given `--send`.
+  - **All six were run against the sandbox;** `create_fee_profile` ran without `--send`.
+- **Crate docs:** the work-in-progress note is gone, and a Security section was added.
+  - 120 undocumented public items were documented.
+  - `#![warn(missing_docs)]` is now on in both crates, and `cargo doc` passes with `-D rustdoc::all`.
+  - The wasm-only `Transport` trait variants needed their own docs; only the wasm build found that.
+- **Public surface:** `Violation` and the hidden `Endpoint` are now `#[non_exhaustive]`. The other public types flagged are enums from `string_enum!`, which are already `#[non_exhaustive]`, or have private fields.
+- **Release files:** `RELEASING.md` and `.github/workflows/release.yml` are adapted from repay. The release also runs `cargo xtask conformance`.
+  - **Trusted publishing:** the setup steps are for `lendsimple/achq-rs` (confirmed with the user).
+  - **The release checklist** adds the sandbox suite and an optional `cargo xtask record` refresh, which keeps its one fee profile.
+- **`scripts/test-packaged-crate.sh`** packages with `--exclude xtask`, because `cargo package --workspace` fails on xtask's path-only `achq` dependency. (`cargo publish --workspace` already skips `publish = false` members.)
+  - **The whole suite passes from the packaged crates.** `derive_ui` and `onboarding_schema` skip there; the sandbox tests are ignored.
+  - The package ships `tests/data/**` and `tests/snapshots/**`.
+- **CI:** new `package` (`cargo publish --dry-run --workspace`), `package-tests` and `docs-rs` jobs.
+- **CHANGELOG:** `[Unreleased]` was rewritten as one first-release list, with its link.
+- **`implementation.md` is kept,** not deleted, since it is the design record and holds the open items; the README points to it.
+- **Tests:** 272 pass with all features, and 7 are ignored (6 sandbox tests, one doctest). The sandbox suite passes live.
+- **Verified:** the full matrix (fmt, clippy ×5, tests ×3, MSRV 1.88, minimal versions, 5 wasm, docs, docs.rs, deny, codegen, conformance, drift), plus `cargo publish --dry-run --workspace` and `./scripts/test-packaged-crate.sh`.
+
+All six stages are complete. Nothing has been pushed or published: the repository has no remote yet. To release, follow `RELEASING.md`, starting with the one-time setup.
 
 ## Verification (end-to-end)
 1. `cargo fmt --check && cargo clippy --workspace --all-targets --all-features -- -D warnings`

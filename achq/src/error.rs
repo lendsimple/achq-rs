@@ -33,8 +33,10 @@ pub enum Error {
     /// A successful response could not be read as the expected type.
     #[error("could not read the response (HTTP {status}): {source}")]
     Decode {
+        /// Why the response could not be read.
         #[source]
         source: Box<dyn std::error::Error + Send + Sync>,
+        /// The HTTP status.
         status: u16,
         /// The start of the response body.
         body: String,
@@ -44,9 +46,11 @@ pub enum Error {
     /// HTML error page.
     #[error("expected a {expected} response, got {content_type} (HTTP {status})")]
     UnexpectedContentType {
+        /// The HTTP status.
         status: u16,
         /// What the command answers with: JSON, or CSV for event tracking.
         expected: &'static str,
+        /// The response's `Content-Type`, or a note that it had none.
         content_type: String,
         /// The start of the response body.
         body: String,
@@ -55,6 +59,7 @@ pub enum Error {
     /// The server answered with an error status.
     #[error("HTTP status {status}")]
     Status {
+        /// The HTTP status.
         status: u16,
         /// The start of the response body, which may help diagnose the failure.
         body: String,

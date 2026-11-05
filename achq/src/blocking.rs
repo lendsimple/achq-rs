@@ -20,6 +20,7 @@ use crate::transport::{HttpRequest, HttpResponse};
 /// [`transport`](crate::transport) for the async counterpart and an example.
 #[cfg(not(target_arch = "wasm32"))]
 pub trait Transport: Send + Sync {
+    /// Sends `request` and returns the response, whatever its status.
     fn send(&self, request: HttpRequest) -> Result<HttpResponse, TransportError>;
 }
 
@@ -29,6 +30,7 @@ pub trait Transport: Send + Sync {
 /// to share it with, and host HTTP APIs (such as WASI's) are often single-threaded.
 #[cfg(target_arch = "wasm32")]
 pub trait Transport {
+    /// Sends `request` and returns the response, whatever its status.
     fn send(&self, request: HttpRequest) -> Result<HttpResponse, TransportError>;
 }
 
@@ -213,6 +215,7 @@ impl<T> ClientBuilder<T> {
 }
 
 impl<T: Transport> ClientBuilder<T> {
+    /// The client.
     pub fn build(self) -> Client<T> {
         Client {
             transport: Arc::new(self.transport),

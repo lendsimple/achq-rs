@@ -70,6 +70,7 @@ pub enum Scope {
 /// Where a command is sent.
 #[doc(hidden)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum Endpoint {
     /// The gateway: a form-encoded `POST` with the credentials in the form.
     Gateway,

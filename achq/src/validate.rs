@@ -31,6 +31,7 @@ pub trait Validate {
 
 /// One value that breaks a constraint.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct Violation {
     /// Where the value is, by Rust field names: `customer.zip`.
     pub path: String,

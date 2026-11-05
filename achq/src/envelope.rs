@@ -234,10 +234,13 @@ impl Visitor<'_> for ResponseCodeVisitor {
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
 #[non_exhaustive]
 pub struct ExpressVerify {
+    /// Whether the account is in good standing.
     #[serde(rename = "Status", default)]
     pub status: Option<VerificationStatus>,
+    /// Why: the verification network's code.
     #[serde(rename = "Code", default)]
     pub code: Option<VerificationCode>,
+    /// The code's description.
     #[serde(rename = "Description", default)]
     pub description: Option<String>,
     /// When the account joined the real-time verification network.

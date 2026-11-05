@@ -32,12 +32,16 @@ use crate::validate::{Path, Validate, Violation, check_length, check_rule, rules
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
 pub struct MerchantApplication {
+    /// The business being enrolled.
     pub business_entity: BusinessEntity,
+    /// The business's principal owner.
     pub principal_owner: PrincipalOwner,
     /// Another representative of the company, if any.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub authorized_representative: Option<AuthorizedRepresentative>,
+    /// The payment services the merchant needs.
     pub payment_profile: PaymentProfile,
+    /// The merchant's bank accounts.
     pub bank_accounts: BankAccounts,
     /// Who performs know-your-customer checks. Both are ACHQ's unless your
     /// account manager agreed otherwise.
@@ -87,6 +91,7 @@ pub struct BusinessEntity {
     /// The legal form.
     #[serde(rename = "type")]
     pub kind: BusinessType,
+    /// The business's website.
     #[achq(min_length = 1, max_length = 255)]
     pub website: String,
     /// Ten digits, without punctuation.
@@ -95,12 +100,14 @@ pub struct BusinessEntity {
     /// The business model, and its products or services.
     #[achq(min_length = 1, max_length = 255)]
     pub business_description: String,
+    /// The business's street address.
     #[achq(min_length = 1, max_length = 255)]
     pub address1: String,
     /// At most 9 characters, as the API's schema says (such as `Suite 100`).
     #[serde(skip_serializing_if = "Option::is_none")]
     #[achq(max_length = 9)]
     pub address2: Option<String>,
+    /// The business's city.
     #[achq(min_length = 1, max_length = 255)]
     pub city: String,
     /// A state code or name.
@@ -124,8 +131,15 @@ pub struct BusinessEntity {
 #[derive(Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum IndustryChoice {
+    /// A pair from the API's list.
     Listed(Industry),
-    Custom { category: String, specific: String },
+    /// A pair the API's list has gained since this crate's table.
+    Custom {
+        /// The general industry (`industryCategory`).
+        category: String,
+        /// The specific industry (`specificIndustry`).
+        specific: String,
+    },
 }
 
 impl From<Industry> for IndustryChoice {
@@ -167,12 +181,16 @@ impl Validate for IndustryChoice {
 #[builder(on(String, into))]
 #[non_exhaustive]
 pub struct PrincipalOwner {
+    /// The owner's first name.
     #[achq(min_length = 1, max_length = 255)]
     pub first_name: String,
+    /// The owner's last name.
     #[achq(min_length = 1, max_length = 255)]
     pub last_name: String,
+    /// The owner's role, such as CEO.
     #[achq(min_length = 1, max_length = 255)]
     pub job_title: String,
+    /// The owner's company email address.
     #[achq(max_length = 255, rule = "email")]
     pub email: String,
     /// Ten digits, without punctuation.
@@ -189,11 +207,14 @@ pub struct PrincipalOwner {
     #[achq(sensitive)]
     #[serde(serialize_with = "serialize_mdy_slash")]
     pub dob: Date,
+    /// The owner's home street address.
     #[achq(min_length = 1, max_length = 255)]
     pub address1: String,
+    /// More of the owner's home street address.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[achq(max_length = 30)]
     pub address2: Option<String>,
+    /// The owner's home city.
     #[achq(min_length = 1, max_length = 255)]
     pub city: String,
     /// A state or territory, by code or name.
@@ -213,13 +234,17 @@ pub struct PrincipalOwner {
 #[builder(on(String, into))]
 #[non_exhaustive]
 pub struct AuthorizedRepresentative {
+    /// The representative's first name.
     #[achq(min_length = 1, max_length = 255)]
     pub first_name: String,
+    /// The representative's last name.
     #[achq(min_length = 1, max_length = 255)]
     pub last_name: String,
+    /// The representative's business title.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[achq(max_length = 255)]
     pub title: Option<String>,
+    /// The representative's business email address.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[achq(max_length = 255, rule = "email")]
     pub email: Option<String>,
@@ -265,6 +290,8 @@ pub struct Limits {
 }
 
 impl Limits {
+    /// Limits of `dollars_per_month` and `count_per_month`, and of `max_amount` for one
+    /// payment.
     pub fn new(dollars_per_month: u64, count_per_month: u32, max_amount: u32) -> Self {
         Self {
             dollars_per_month,
@@ -304,6 +331,7 @@ pub struct PaymentProfile {
     /// Ten digits, shown on customers' statements.
     #[achq(min_length = 10, max_length = 10, rule = "digits")]
     pub customer_service_phone: String,
+    /// The customer service email address.
     #[achq(max_length = 255, rule = "email")]
     pub customer_service_email: String,
     /// What the merchant uses the payments for, such as payroll or tuition.
@@ -376,17 +404,24 @@ impl Serialize for PaymentProfile {
 #[derive(Clone, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum FundingAccount {
+    /// A bank account by its numbers.
     Bank {
+        /// The bank's name.
         bank_name: String,
+        /// The ABA routing number.
         routing_number: String,
+        /// The account number.
         account_number: String,
     },
+    /// A Plaid processor token for the account.
     Plaid {
+        /// The token.
         token: String,
     },
 }
 
 impl FundingAccount {
+    /// A bank account by its bank's name, routing number and account number.
     pub fn bank(
         bank_name: impl Into<String>,
         routing_number: impl Into<String>,
@@ -399,6 +434,7 @@ impl FundingAccount {
         }
     }
 
+    /// A Plaid processor token for the account.
     pub fn plaid(token: impl Into<String>) -> Self {
         Self::Plaid {
             token: token.into(),
@@ -595,6 +631,7 @@ impl Validate for FeeChoice {
 pub struct MerchantOnboarded {
     /// The application's ID.
     pub id: OnboardingId,
+    /// The application's status, such as `Pending`.
     pub status: Option<String>,
     /// The API's ID of the request, to quote to ACHQ support.
     pub api_request_id: Option<String>,

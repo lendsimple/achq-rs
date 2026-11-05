@@ -40,7 +40,9 @@ use crate::error::TransportError;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum Method {
+    /// `GET`.
     Get,
+    /// `POST`.
     Post,
 }
 
@@ -67,6 +69,7 @@ impl fmt::Display for Method {
 #[derive(Clone, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct HttpRequest {
+    /// The method.
     pub method: Method,
     /// The full URL.
     pub url: String,
@@ -116,13 +119,16 @@ impl fmt::Debug for HttpRequest {
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct HttpResponse {
+    /// The HTTP status.
     pub status: u16,
     /// Header names and values, as received.
     pub headers: Vec<(String, String)>,
+    /// The body; empty when the response has none.
     pub body: Vec<u8>,
 }
 
 impl HttpResponse {
+    /// A response with `status`, `headers` and `body`.
     pub fn new(status: u16, headers: Vec<(String, String)>, body: impl Into<Vec<u8>>) -> Self {
         Self {
             status,
@@ -164,6 +170,7 @@ impl HttpResponse {
 /// TLS or timeout failure); an HTTP error status is a response.
 #[cfg(not(target_arch = "wasm32"))]
 pub trait Transport: Send + Sync {
+    /// Sends `request` and returns the response, whatever its status.
     fn send(
         &self,
         request: HttpRequest,
@@ -179,6 +186,7 @@ pub trait Transport: Send + Sync {
 /// TLS or timeout failure); an HTTP error status is a response.
 #[cfg(target_arch = "wasm32")]
 pub trait Transport {
+    /// Sends `request` and returns the response, whatever its status.
     fn send(
         &self,
         request: HttpRequest,

@@ -97,12 +97,16 @@ pub struct Customer {
     /// The merchant's ID of the customer.
     #[achq(form = "CustomerID", max_length = 20)]
     pub customer_id: Option<String>,
+    /// The street address on the account.
     #[achq(form = "Address1", min_length = 1, max_length = 70)]
     pub address1: String,
+    /// More of the street address.
     #[achq(form = "Address2", max_length = 40)]
     pub address2: Option<String>,
+    /// The city.
     #[achq(form = "City", min_length = 1, max_length = 70)]
     pub city: String,
+    /// The state.
     #[achq(form = "State", min_length = 1, max_length = 30)]
     pub state: String,
     /// `#####` or `#####-####`.
@@ -111,8 +115,10 @@ pub struct Customer {
     /// The two-letter country code (ISO 3166). The gateway's default is `US`.
     #[achq(form = "Country", min_length = 2, max_length = 2)]
     pub country: Option<String>,
+    /// The phone number.
     #[achq(form = "Phone", min_length = 1, max_length = 20)]
     pub phone: String,
+    /// The email address, to which ACHQ sends notices when asked to.
     #[achq(form = "Email", max_length = 80, rule = "email")]
     pub email: String,
 }
@@ -123,26 +129,37 @@ pub struct Customer {
 #[achq(form)]
 #[non_exhaustive]
 pub struct CustomerUpdate {
+    /// The name on the account.
     #[achq(form = "CustomerName", min_length = 1, max_length = 80)]
     pub name: Option<String>,
+    /// The company on the account.
     #[achq(form = "Company", max_length = 80)]
     pub company: Option<String>,
+    /// The merchant's ID of the customer.
     #[achq(form = "CustomerID", max_length = 20)]
     pub customer_id: Option<String>,
+    /// The street address.
     #[achq(form = "Address1", min_length = 1, max_length = 70)]
     pub address1: Option<String>,
+    /// More of the street address.
     #[achq(form = "Address2", max_length = 40)]
     pub address2: Option<String>,
+    /// The city.
     #[achq(form = "City", min_length = 1, max_length = 70)]
     pub city: Option<String>,
+    /// The state.
     #[achq(form = "State", min_length = 1, max_length = 30)]
     pub state: Option<String>,
+    /// `#####` or `#####-####`.
     #[achq(form = "Zip", rule = "zip")]
     pub zip: Option<String>,
+    /// The two-letter country code (ISO 3166).
     #[achq(form = "Country", min_length = 2, max_length = 2)]
     pub country: Option<String>,
+    /// The phone number.
     #[achq(form = "Phone", min_length = 1, max_length = 20)]
     pub phone: Option<String>,
+    /// The email address.
     #[achq(form = "Email", max_length = 80, rule = "email")]
     pub email: Option<String>,
 }
@@ -164,6 +181,7 @@ pub struct CustomerUpdate {
 pub enum PaymentSource {
     /// A bank account by its numbers.
     Bank {
+        /// The account.
         account: BankAccount,
         /// Whether to create an [`AchqToken`] for the account, returned with the
         /// payment (`Create_ACHQToken`).
@@ -171,7 +189,9 @@ pub enum PaymentSource {
     },
     /// A token standing in for a bank account.
     Token {
+        /// The token.
         token: AccountToken,
+        /// Who issued the token.
         source: TokenSource,
     },
 }
@@ -371,28 +391,37 @@ fn check_customer_ip(
 #[achq(form, check = "has_changes")]
 #[non_exhaustive]
 pub struct PaymentUpdate {
+    /// Your platform's new ID of the payment.
     #[builder(into)]
     #[achq(form = "Provider_TransactionID", max_length = 50)]
     pub provider_transaction_id: Option<ProviderTransactionId>,
+    /// The merchant's new ID of the payment.
     #[builder(into)]
     #[achq(form = "Merchant_ReferenceID", max_length = 50)]
     pub merchant_reference_id: Option<MerchantReferenceId>,
+    /// The new amount.
     #[builder(into)]
     #[achq(form = "Amount")]
     pub amount: Option<Amount>,
+    /// The new direction.
     #[achq(form = "PaymentDirection")]
     pub direction: Option<PaymentDirection>,
+    /// The new description.
     #[achq(form = "Description", max_length = 100)]
     pub description: Option<String>,
+    /// The new authorization type.
     #[achq(form = "SECCode")]
     pub sec_code: Option<SecCode>,
+    /// The new day to process the payment.
     #[achq(form = "DateScheduled", with = "mdy_slash")]
     pub date_scheduled: Option<Date>,
+    /// The new delivery window.
     #[achq(form = "DeliveryWindow")]
     pub delivery_window: Option<DeliveryWindow>,
     /// Changes to the customer, sent as the `Billing_` fields.
     #[achq(flatten, prefix = "Billing_")]
     pub customer: Option<CustomerUpdate>,
+    /// The customer's IP address; required for a change to WEB.
     #[builder(into)]
     #[achq(form = "Customer_IPAddress")]
     pub customer_ip: Option<IpAddr>,
@@ -430,6 +459,7 @@ pub struct RefundRequest {
     #[builder(into)]
     #[achq(form = "Amount")]
     pub amount: Option<Amount>,
+    /// A description for the merchant.
     #[achq(form = "Description", max_length = 100)]
     pub description: Option<String>,
     /// The day to send the refund; the day it is created if not set.

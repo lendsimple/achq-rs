@@ -44,6 +44,8 @@
 //!
 //! A `T` field is always written, an `Option<T>` field only when it is `Some`.
 
+#![warn(missing_docs)]
+
 mod attrs;
 mod cardinality;
 mod form;
@@ -52,6 +54,8 @@ mod model;
 use proc_macro::TokenStream;
 use syn::{Data, DeriveInput, parse_macro_input};
 
+/// Derives `Validate` and a redacting `Debug`, and with `#[achq(form)]` `ToForm`;
+/// see the crate documentation.
 #[proc_macro_derive(Model, attributes(achq))]
 pub fn derive_model(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);

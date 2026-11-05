@@ -1,9 +1,6 @@
 //! A typed client for the [ACHQ](https://www.achq.com) bank payments API
 //! (formerly SpeedChex), for native targets and WebAssembly.
 //!
-//! **Work in progress:** the README, examples and release come in a later
-//! release; the API itself is complete.
-//!
 //! ```no_run
 //! # #[cfg(feature = "reqwest")]
 //! # async fn run() -> Result<(), achq::Error> {
@@ -72,12 +69,19 @@
 //! Without a transport feature, the clients take any
 //! [`Transport`](transport::Transport) or [`blocking::Transport`].
 //!
-//! The gateway keys grant access to merchants' bank payments: keep them on a
-//! server. The WebAssembly builds are for servers, edge workers and WASI hosts,
-//! not for browsers.
+//! # Security
+//!
+//! - The gate keys can move your merchants' money: keep them on a server. The
+//!   WebAssembly builds are for servers, edge workers and WASI hosts, not for
+//!   browsers, where ACHQ's IP allow-listing would refuse the requests anyway.
+//! - Gate keys, account numbers, tokens, SSNs, dates of birth and tax IDs are kept
+//!   out of `Debug` output and logs.
+//! - The public sandbox ([`ProviderCredentials::sandbox`]) is shared: anyone using
+//!   it can see what you send. Send it only made-up data.
 
 // docs.rs builds with `--cfg docsrs` and labels items that need a feature.
 #![cfg_attr(docsrs, feature(doc_cfg))]
+#![warn(missing_docs)]
 
 // Lets derived code refer to `::achq::...` inside this crate too.
 extern crate self as achq;
@@ -113,6 +117,11 @@ pub use error::{ApiError, Error, OnboardingError, TransportError};
 pub use operation::{Operation, Scope};
 pub use rust_decimal::{Decimal, dec};
 pub use secrecy::SecretString;
+
+/// Compiles the README's examples as doc tests.
+#[cfg(all(doctest, feature = "reqwest", feature = "ureq", feature = "onboarding"))]
+#[doc = include_str!("../README.md")]
+struct ReadmeDoctests;
 
 /// Implements `Validate`, a redacting `Debug`, and (with `#[achq(form)]`)
 /// `ToForm`.

@@ -73,6 +73,7 @@ fn percent<S: Serializer>(value: &Decimal, serializer: S) -> Result<S::Ok, S::Er
 pub struct FeeProfileCreated {
     /// The profile's ID, to assign it to merchants.
     pub fee_profile_id: FeeProfileId,
+    /// The API's status for the request, such as `Success`.
     pub status: Option<String>,
     /// The API's ID of the request, to quote to ACHQ support.
     pub api_request_id: Option<String>,

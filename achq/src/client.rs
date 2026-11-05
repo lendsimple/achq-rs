@@ -230,6 +230,7 @@ impl<T> ClientBuilder<T> {
 }
 
 impl<T: Transport> ClientBuilder<T> {
+    /// The client.
     pub fn build(self) -> Client<T> {
         Client {
             transport: Arc::new(self.transport),

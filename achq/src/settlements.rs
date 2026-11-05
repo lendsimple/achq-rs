@@ -123,17 +123,22 @@ string_enum! {
 #[derive(Debug, Clone, Default, PartialEq, Deserialize)]
 #[non_exhaustive]
 pub struct Settlement {
+    /// The settlement's ID, to list its payments.
     #[serde(rename = "SettlementID", default)]
     pub settlement_id: Option<SettlementId>,
+    /// The merchant whose account the settlement moved money for.
     #[serde(rename = "MerchantID", default)]
     pub merchant_id: Option<MerchantId>,
+    /// Why the settlement moved money.
     #[serde(rename = "SettlementType", default)]
     pub settlement_type: Option<SettlementType>,
     /// The day the transfer should post to the merchant's account.
     #[serde(rename = "EffectiveDate", default)]
     pub effective_date: Option<LocalDateTime>,
+    /// The amount transferred.
     #[serde(rename = "Amount", default)]
     pub amount: Option<Amount>,
+    /// Into or out of the merchant's account.
     #[serde(rename = "TransferDirection", alias = "PaymentDirection", default)]
     pub direction: Option<TransferDirection>,
     /// How many payments the settlement covers.
@@ -162,8 +167,10 @@ pub struct SettlementItem {
         default
     )]
     pub payment_id: Option<PaymentId>,
+    /// The customer's name.
     #[serde(rename = "CustomerName", default)]
     pub customer_name: Option<String>,
+    /// The customer's company.
     #[serde(rename = "Company", default)]
     pub company: Option<String>,
     /// The day the Federal Reserve processed the payment.
@@ -172,10 +179,13 @@ pub struct SettlementItem {
     /// Whether it was processed as a Same-Day ACH payment.
     #[serde(rename = "SameDayACH", default)]
     pub same_day_ach: Option<bool>,
+    /// The payment's amount.
     #[serde(rename = "Amount", default)]
     pub amount: Option<Amount>,
+    /// Whether the payment was a debit or a credit of the customer.
     #[serde(rename = "PaymentDirection", default)]
     pub direction: Option<PaymentDirection>,
+    /// The payment's description.
     #[serde(rename = "Description", default)]
     pub description: Option<String>,
     #[serde(
@@ -183,7 +193,9 @@ pub struct SettlementItem {
         alias = "Merchant_ReferenceID",
         default
     )]
+    /// The merchant's ID of the payment.
     pub merchant_reference_id: Option<MerchantReferenceId>,
+    /// Your platform's ID of the payment.
     #[serde(rename = "Provider_TransactionID", default)]
     pub provider_transaction_id: Option<ProviderTransactionId>,
     /// The payment's status now. Undocumented; the gateway sends it.
@@ -201,10 +213,13 @@ pub struct SettlementItem {
 #[derive(Debug, Clone, Default, PartialEq, Deserialize)]
 #[non_exhaustive]
 pub struct SettlementDetailsPage {
+    /// The settlement's summary.
     #[serde(flatten)]
     pub settlement: Settlement,
+    /// This page's number, from 1.
     #[serde(rename = "PageNumber", default)]
     pub page_number: Option<u32>,
+    /// The number of payments per page.
     #[serde(rename = "PageSize", default)]
     pub page_size: Option<u32>,
     /// The payments on this page.

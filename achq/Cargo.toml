@@ -53,3 +53,27 @@ native-tls = ["reqwest?/native-tls", "ureq?/native-tls"]
 ## The onboarding API: industry categories now, merchant and fee profile
 ## creation in a later release.
 onboarding = []
+
+[[example]]
+name = "tokenize_and_charge"
+required-features = ["reqwest"]
+
+[[example]]
+name = "payment_lifecycle"
+required-features = ["reqwest"]
+
+[[example]]
+name = "daily_events"
+required-features = ["reqwest"]
+
+[[example]]
+name = "settlements"
+required-features = ["reqwest"]
+
+[[example]]
+name = "charge_blocking"
+required-features = ["ureq"]
+
+[[example]]
+name = "create_fee_profile"
+required-features = ["reqwest", "onboarding"]

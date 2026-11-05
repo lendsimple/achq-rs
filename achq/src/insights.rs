@@ -30,8 +30,10 @@ pub struct AccountStatusRequest {
     #[builder(into)]
     #[achq(form = "Provider_TransactionID", max_length = 50)]
     pub provider_transaction_id: Option<ProviderTransactionId>,
+    /// The ABA routing number.
     #[achq(form = "RoutingNumber", rule = "routing_number")]
     pub routing_number: String,
+    /// The account number.
     #[achq(form = "AccountNumber", sensitive, max_length = 30)]
     pub account_number: String,
 }
@@ -46,11 +48,14 @@ pub struct AccountStatusRequest {
 #[achq(form)]
 #[non_exhaustive]
 pub struct OwnerAuthRequest {
+    /// Your platform's ID of the request, echoed in the response.
     #[builder(into)]
     #[achq(form = "Provider_TransactionID", max_length = 50)]
     pub provider_transaction_id: Option<ProviderTransactionId>,
+    /// The ABA routing number.
     #[achq(form = "RoutingNumber", rule = "routing_number")]
     pub routing_number: String,
+    /// The account number.
     #[achq(form = "AccountNumber", sensitive, max_length = 30)]
     pub account_number: String,
     /// The person on a personal account.
@@ -59,14 +64,19 @@ pub struct OwnerAuthRequest {
     /// The company on a business account.
     #[achq(form = "Company")]
     pub company: Option<String>,
+    /// The owner's street address.
     #[achq(form = "Address1")]
     pub address1: Option<String>,
+    /// More of the owner's street address.
     #[achq(form = "Address2")]
     pub address2: Option<String>,
+    /// The owner's city.
     #[achq(form = "City")]
     pub city: Option<String>,
+    /// The owner's state.
     #[achq(form = "State")]
     pub state: Option<String>,
+    /// The owner's ZIP code.
     #[achq(form = "Zip", rule = "zip")]
     pub zip: Option<String>,
     /// `US` or `CA`.
@@ -120,10 +130,13 @@ impl Decode for AccountVerification {
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
 #[non_exhaustive]
 pub struct OwnerAuth {
+    /// Whether the owner was confirmed.
     #[serde(rename = "Status", default)]
     pub status: Option<VerificationStatus>,
+    /// Why: the verification network's code.
     #[serde(rename = "Code", default)]
     pub code: Option<VerificationCode>,
+    /// The code's description.
     #[serde(rename = "Description", default)]
     pub description: Option<String>,
 }

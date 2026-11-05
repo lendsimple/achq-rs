@@ -97,22 +97,27 @@ impl Context {
         self
     }
 
+    /// The platform's credentials.
     pub fn provider(&self) -> &ProviderCredentials {
         &self.provider
     }
 
+    /// The merchant's credentials, if any.
     pub fn get_merchant(&self) -> Option<&MerchantCredentials> {
         self.merchant.as_ref()
     }
 
+    /// Where requests go.
     pub fn get_endpoints(&self) -> &Endpoints {
         &self.endpoints
     }
 
+    /// Whether commands are sent with `TestMode=On`.
     pub fn is_test_mode(&self) -> bool {
         self.test_mode
     }
 
+    /// The `User-Agent` header.
     pub fn get_user_agent(&self) -> &str {
         &self.user_agent
     }

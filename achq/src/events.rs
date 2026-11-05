@@ -182,8 +182,11 @@ string_enum! {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct EventVerification {
+    /// Whether the account was in good standing.
     pub status: Option<VerificationStatus>,
+    /// Why: the verification network's code.
     pub code: Option<VerificationCode>,
+    /// The code's description.
     pub description: Option<String>,
 }
 
@@ -195,6 +198,7 @@ pub struct PaymentEvent {
     pub payment_id: PaymentId,
     /// Your platform's ID of the payment.
     pub provider_transaction_id: Option<ProviderTransactionId>,
+    /// The merchant the payment belongs to.
     pub merchant_id: Option<MerchantId>,
     /// What happened.
     pub event: EventName,
@@ -206,6 +210,7 @@ pub struct PaymentEvent {
     pub return_code: Option<ReturnCode>,
     /// The bank's explanation of the return.
     pub return_explanation: Option<String>,
+    /// The bank account verification reported with the event, if one ran.
     pub verification: Option<EventVerification>,
 }
 
@@ -213,6 +218,7 @@ pub struct PaymentEvent {
 #[derive(Debug, Clone, Default, PartialEq)]
 #[non_exhaustive]
 pub struct EventBatch {
+    /// The events.
     pub events: Vec<PaymentEvent>,
     /// The gateway's ID of the query, from its `Command Response` row.
     pub command_id: Option<CommandId>,
