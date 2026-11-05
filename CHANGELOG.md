@@ -8,6 +8,8 @@ the crates follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-05
+
 ### Added
 
 - `Client`, the async client, with `ReqwestTransport` (feature `reqwest`, on by
@@ -53,4 +55,5 @@ the crates follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   recorded from ACHQ's public sandbox as test fixtures; and an opt-in test suite
   against the sandbox.
 
-[Unreleased]: https://github.com/lendsimple/achq-rs/commits/main
+[Unreleased]: https://github.com/lendsimple/achq-rs/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/lendsimple/achq-rs/releases/tag/v0.1.0
